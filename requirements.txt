@@ -1,0 +1,6 @@
+pytorch_lightning==1.0.6
+pytorch_lightning_bolts==0.2.5
+torchvision==0.7.0
+batchgenerators==0.21
+torch==1.6.0
+numpy==1.20.2
