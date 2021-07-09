@@ -3,10 +3,10 @@
 > Contrastive Representations for unsupervised Anomaly Detection and Localization.
 >
 > Official Code Repository Going alongside the Paper
-<!-- > Live demo [_here_](https://www.example.com). If you have the project hosted somewhere, include the link here. -->
+
 
 ## Table of Contents
-- [Explain](#explain)
+- [CRADL](#CRADL)
   - [Table of Contents](#table-of-contents)
   - [General Information](#general-information)
   - [Technologies Used](#technologies-used)
@@ -20,7 +20,6 @@
 
 ## General Information
 
-<!-- You don't have to answer all the questions - just the ones relevant to your project. -->
 
 
 ## Technologies Used
@@ -31,11 +30,6 @@
 ## Features
 Contrastive Pretext Training on Medical Data 
 
-
-
-<!-- ## Screenshots
-![Example screenshot](./img/screenshot.png) -->
-<!-- If you have screenshots you'd like to share, include them here. -->
 
 
 ## Setup
@@ -68,7 +62,7 @@ Anomaly Detection with the CRADL framework on 2D data.
 
 ## Project Status
 Project is _in progress_
-<!-- Project is: _in progress_ / _complete_ / _no longer being worked on_. If you are no longer working on it, provide reasons why. -->
+
 
 
 ## Room for Improvement
@@ -79,15 +73,5 @@ Anomaly Detection in 2D:
 
 
 ## Acknowledgements
-<!-- - This project was based on [this tutorial](https://www.example.com). -->
 
-
-<!-- ## Contact -->
-<!-- Created by [@flynerdpl](https://www.flynerd.pl/) - feel free to contact me! -->
-
-
-<!-- Optional -->
 ## License 
-<!-- This project is open source and available under the [... License](). -->
-
-<!-- You don't have to include all sections - just the one's relevant to your project
