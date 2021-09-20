@@ -46,7 +46,7 @@ def get_brain_datasets(common_args=None, trainset_args=None, valset_args=None, v
 
 
 class BrainDataModule(pl.LightningDataModule):
-    def __init__(self, batch_size:int, double_headed:bool=False, mask_type:str = 'test', target_size:int = 128, transform_type='single', base_train='default',base_dir:list = [],*args, **kwargs):
+    def __init__(self, batch_size:int, double_headed:bool=False, mask_type:str = 'test', target_size:int = 128, transform_type='single', base_train='default',base_dir:list = [], mode='train',*args, **kwargs):
         super().__init__()
         self.args = {'batch_size':batch_size, 'double_headed':double_headed, 'mask_type':mask_type, 'transform_type':transform_type, 'base_train':base_train, "target_size":target_size}
         if double_headed or transform_type =='split':
@@ -57,6 +57,9 @@ class BrainDataModule(pl.LightningDataModule):
         self.common_args.update(**self.args)
         self.train_args = dict(**datasets_train_args)
         self.train_args['base_dir'] += base_dir
+
+        self.train_args['mode'] = mode
+
         self.val_args = dict(**datasets_val_args)
         self.val_args.update(val_args)
         self.val_ano_args = dict(**datasets_val_ano_args)

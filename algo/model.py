@@ -11,8 +11,47 @@ from models import base
 
 
 from algo.base_algo.simclr import SimCLR_base
-
+from algo.utils import get_seg_im_gt, process_batch
 from config.paths import trainer_defaults
+
+
+############## Possibly Rewrite this function obtaining y $#####################
+def get_label_latent(experiment, dataloader, get_slice=False, to_npy=False, num_epoch=1):
+    experiment.freeze()
+    latent = []
+    labels = []
+    slices = []
+    with torch.no_grad():
+        for epoch in range(num_epoch):
+            for i, batch in enumerate(dataloader):
+                x, y = process_batch(batch)
+                if y is not None and len(y.shape)>1:
+                    y, _ = get_seg_im_gt(batch) 
+                x = x.to(experiment.device)
+                z = experiment.encode(x)
+                latent.append(z.detach()) 
+                latent= [torch.cat(latent, dim=0)]
+                labels.append(y.detach()) 
+                labels= [torch.cat(labels, dim=0)]
+                if get_slice:
+                    slices.append(batch['slice_idxs'].detach())
+                    slices = [torch.cat(slices, dim=0)]
+
+    
+    labels = labels[0].to('cpu')
+    latent = latent[0].to('cpu')
+    if to_npy:
+        labels=labels.numpy()
+        latent=latent.numpy()
+    
+    out_dict = {'labels' : labels, 'latent' : latent}
+    if get_slice:
+        slices = slices[0].to('cpu')
+        if to_npy:
+            slices = slices.numpy()
+        out_dict['slice_idxs'] = slices
+    return out_dict
+
 
 
 def get_args(DataModule:pl.LightningDataModule, default_experiment='simclr' ,arguments=None):
@@ -173,3 +212,4 @@ def load_best_model(loading_path):
     experiment.load_state_dict(checkpoint['state_dict'])
     experiment.to('cpu')
     return experiment, args
+
