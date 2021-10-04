@@ -51,10 +51,12 @@ def process_batch(batch):
                 x_.append(data.to(torch.float))
         x = tuple(x_)
         del x_
-    # print(x)
+    print(x)
+    print(y)
     return x, y
 
 # TODO: Find a way to make this easily generalizable! (multi channel etc.)
+#might be changing the appearance
 def norm(x, val_range=(0,1), in_range=(-1.5, 1.5)):
     out =  x - in_range[0]  #x.min()
     out /=  (in_range[1] - in_range[0]) # x.max()

@@ -7,35 +7,30 @@ tmp_data_dir = None
 
 
 datasets_common_args = {
-        'batch_size': 64,
-        'target_size': 128,
-        'input_slice': 1,
-        'add_noise': True,
-        'mask_type': 'test', #'test',  # 0.0, ## TODO: Fix this for later!
+        'batch_size': 15, #12
+        'patch_size': (50,50,50),
         'elastic_deform': False,
         'rnd_crop': True,
         'rotate': True,
-        'color_augment': True,
-        'add_slices': 0,
-        'double_headed' : False,
-        'base_train' : 'default'
+        'num_threads_in_multithreaded': 1
+        #'base_train' : 'default'
     }
 
 datasets_train_args = {
-        'base_dir': [data_dir + '/brain/hcp_train/'],
-        'slice_offset': 20,
+        'base_dir': [data_dir + '/all'], #insp_jacobian
+        #'slice_offset': 20,
         'num_processes': 12,
-        'tmp_dir': tmp_data_dir,
+        #'tmp_dir': tmp_data_dir,
     }
 
 datasets_val_args = {
-        'base_dir': [data_dir + '/brain/hcp_eval/'],
+        'base_dir': [data_dir + '/all'], #insp_jacobian
         'n_items': 6400,
         'do_reshuffle': False,
         'mode': 'val',
         'num_processes': 4,
-        'slice_offset': 20,
-        'tmp_dir': tmp_data_dir,
+        #'slice_offset': 20,
+        #'tmp_dir': tmp_data_dir,
     }
 
 datasets_val_ano_args = {
@@ -44,8 +39,8 @@ datasets_val_ano_args = {
         "do_reshuffle": False,
         "mode": "val",
         "num_processes": 4,
-        "slice_offset": 10,
-        "label_slice": 2,
+        #"slice_offset": 10,
+        #"label_slice": 2,
         "tmp_dir": tmp_data_dir,
     }
 
@@ -55,8 +50,8 @@ datasets_test_args = {
         "do_reshuffle": False,
         "mode": "val",
         "num_processes": 4,
-        "slice_offset": 10,
-        "label_slice": 2,
+        #"slice_offset": 10,
+        #"label_slice": 2,
         "tmp_dir": tmp_data_dir,
     }
 
@@ -66,8 +61,8 @@ eval_val_ano_args = {
         'do_reshuffle': False,
         'mode': 'val',
         'num_processes': 4,
-        'slice_offset': 10,
-        'label_slice': 2,
+        #'slice_offset': 10,
+        #'label_slice': 2,
         'tmp_dir': tmp_data_dir,
     }
 
@@ -77,8 +72,8 @@ eval_test_args = {
         'do_reshuffle': False,
         'mode': 'val',
         'num_processes': 4,
-        'slice_offset': 10,
-        'label_slice': 2,
+        #'slice_offset': 10,
+        #'label_slice': 2,
         'tmp_dir': tmp_data_dir,
     }
 
@@ -90,8 +85,8 @@ eval_loader_args = {
         'do_reshuffle': False,
         'mode': 'val',
         'num_processes': 8,
-        'slice_offset': 10,
-        'label_slice': 2,
+        #'slice_offset': 10,
+        '#label_slice': 2,
         'tmp_dir': tmp_data_dir,
     },
     'hcp_syn_val' : {
@@ -100,8 +95,8 @@ eval_loader_args = {
         'do_reshuffle': False,
         'mode': 'val',
         'num_processes': 8,
-        'slice_offset': 10,
-        'label_slice': 2,
+        #'slice_offset': 10,
+        #'label_slice': 2,
         'tmp_dir': tmp_data_dir,
     },
     'hcp_syn_test' : {
@@ -161,7 +156,7 @@ train_eval = {
         # 'mode' : 'train'
 }
 
-def get_brain_args(mode='eval', data_type='default', cond=False):
+def get_brain_args(mode='eval',data_type='default', cond=False):
     """Returns the default arguments to generate the brain dataset, 
     given the mode and the type of datasets wished.
 
@@ -201,9 +196,3 @@ def get_brain_args(mode='eval', data_type='default', cond=False):
                 'valanoset_args': d_val_ano, 
                 'testset_args': d_test}
     return args_dict
-
-
-
-        
-
-    

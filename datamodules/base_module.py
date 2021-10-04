@@ -59,10 +59,10 @@ class BaseDatamodule(pl.LightningDataModule):
     def add_data_specific_args(parent_parser):
         #Dataset specific arguments
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument("--batch_size", default=128, type=int)
-
+        parser.add_argument("--batch_size", default=15, type=int)
+        parser.add_argument("--input", default='insp', type=str, choices=['insp', 'insp_exp_reg', 'insp_jacobian', 'jacobian'])
         #Training specific arguments
         parser.add_argument("--val_size", default=0.1, type=float)
-        parser.add_argument("--num_workers", default=12, type=int)
+        parser.add_argument("--num_workers", default=1, type=int)
         return parser
 

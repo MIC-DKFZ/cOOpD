@@ -14,5 +14,6 @@ class SimCLR(nn.Module):
     def forward(self, x):
         # TODO: This needs to be doublecked for VAE since the model will have a different encoder etc...
         h = self.encoder(x)
+        pteste = torch.flatten(h, start_dim=1)
         z = self.projection(torch.flatten(h, start_dim=1))
         return z, h

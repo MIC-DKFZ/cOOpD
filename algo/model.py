@@ -56,7 +56,8 @@ def get_base_parser(default_experiment=None):
     return parser
 
 def finalize_args(args, Experiment:pl.LightningModule ,DataModule:pl.LightningDataModule):
-    args.input_shape = DataModule.get_shape(**vars(args)) 
+
+    args.input_shape = DataModule.get_shape(**vars(args))
     if args.seed is None:
         args.seed = random.randint(0, 360)
     pl.seed_everything(args.seed)
@@ -100,33 +101,24 @@ def get_decoder(args, num_layers:int = 0, final=torch.nn.Sigmoid):
     else:
         raise NotImplementedError
 
-def get_experiment(args, num_layers:int = 0):
-
-
-    if num_layers == 0:
-        num_layers = int(math.log2(args.input_shape[-1])//1)-1
-
-    if (math.pow(2, num_layers+1) / args.input_shape[-1])!= 1 and args.model_type=='dc':
-        message = "The input size of {} cannot be used for a DC Enc/Dec based model \nTry 2**x = size".format(args.input_shape[-1])
-        raise Exception(message)
+def get_experiment(args, num_layers:int = 5): #2
 
 
     if args.experiment in ['simclr']:
-        if args.model_type[:6] == 'resnet':
+        if args.model_type[:6] == 'CNN3D':
+            model = base.CNN3D(in_channels=args.input_shape[0], out_channels=args.z_dim, num_feat=args.num_ft, bias=True, num_layers=num_layers)
+        elif args.model_type[:6] == 'resnet':
             args.num_ft = 0
-            if args.input_shape[1] == 32:
+            if args.input_shape[1] == 50:
                 cifar_stem=True
-            elif args.input_shape[1] >= 64:
-                cifar_stem = False
             else:
                 raise NotImplementedError
             model = base.ResNet_Encoder(base_model=args.model_type, channels_in=args.input_shape[0], cifar_stem=cifar_stem)
-        elif args.model_type == 'dc':
-            model = base.get_encoder(in_channels=args.input_shape[0], out_channels=args.z_dim, num_feat=args.num_ft, bias=True, num_layers=num_layers)
+        elif args.model_type[:6] == 'VGG':
+            model = base.VGG(in_channels= args.input_shape[0], vgg_name='VGG11')
         # Here can new model types be implemented!
         else:
             raise NotImplementedError
-        args.z_dim = model.z_dim
     else:
         raise NotImplementedError
 

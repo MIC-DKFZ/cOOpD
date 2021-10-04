@@ -40,14 +40,16 @@ def main(args):
     # Initialize Data
     dm = BrainDataModule(**vars(args))
     dm.prepare_data()
-    
 
-    loader_dict = {'train':dm.train_dataloader(), 'val':dm.val_dataloader(), 'test':dm.test_dataloader()}
+    train_loader, val_loader = dm.train_dataloader()
+
+    #loader_dict = {'train':dm.train_dataloader()[0], 'val':dm.train_dataloader()[1], 'test':dm.test_dataloader()}
+    loader_dict = {'train':train_loader, 'val':val_loader, 'test':dm.test_dataloader()}
+
     args.num_samples = len(loader_dict['train'])*args.batch_size
 
     #Initialize Model
     experiment = get_experiment(args)
-
 
     trainer.fit(model=experiment, train_dataloader=loader_dict['train'], val_dataloaders=loader_dict['val'])
     return experiment.logger.log_dir

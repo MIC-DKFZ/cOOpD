@@ -24,7 +24,7 @@ class SimCLR_base(pl.LightningModule):
         self.hparams = hparams
         self.show_input_every = 1000
         self.show_n = 64
-        print(self.model)
+        #print(self.model)
 
     def forward(self, x):
         return self.model(x)
@@ -33,7 +33,56 @@ class SimCLR_base(pl.LightningModule):
         return self.model.encode(x).flatten(start_dim=1)
 
     def shared_step(self, batch, sum_samples=True, mode='train', vis=False, ano=False):
+        #print(batch)
+        print('reached_batch_form', batch['patient_name'], batch['label'])
+        print('batch_size')
+        print(len(batch['data'][0]))
+        print(len(batch['data'][1]))
+        print(len(batch['label']))
+
+        try:
+            from batchviewer import view_batch
+            # same patient, two augm
+            # first pair
+            #print(batch['data'])
+            #print(batch['data'][0])
+
+            # view_batch(batch['data'][0][0])
+            # view_batch(batch['data'][0][1])
+
+
+
+        except ImportError:
+            view_batch = None
+
         (x_a, x_b), y = process_batch(batch)
+
+        try:
+            from batchviewer import view_batch
+            # same patient, two augm
+            # first pair
+            print(x_a.shape)
+
+            # view_batch(x_a[0, 0,:,:,:])
+            # view_batch(x_b[0, 0,:,:,:])
+
+            # view_batch(x_a[1, 0, :, :,:])
+            # view_batch(x_b[1, 0, :, :,:])
+            #
+            # view_batch(x_a[2, 0, :, :,:])
+            # view_batch(x_b[2, 0, :, :,:])
+            #
+            # view_batch(x_a[7, 0, :, :,:])
+            # view_batch(x_b[7, 0, :, :,:])
+
+
+
+
+
+
+        except ImportError:
+            view_batch = None
+
         proj_a, z_a = self.model(x_a)
         proj_b, z_b = self.model(x_b)
 
@@ -47,9 +96,19 @@ class SimCLR_base(pl.LightningModule):
             vis_dict = {f'{mode}_i/input': x_a, f'{mode}_j/input': x_b}
             for key, value in vis_dict.items():
                 n=self.show_n
-                self.logger.experiment.add_image(key, norm(vutils.make_grid(value[:n].to('cpu').detach())), self.current_epoch,)
-        
+                print(value.shape)
+                print(value[:64].shape)
+                #print(norm(vutils.make_grid(value[:n].to('cpu').detach())))
+                print(list(value.shape))
+                print(list(value.shape)[1])
+                # for channel in range(list(value.shape)[1]):
+                #     print(channel)
+                #     print(value[:,channel,:,:,:].shape)
+                #     #vutils.make_grid(value[:n].to('cpu').detach())
+                self.logger.experiment.add_image(key, norm(vutils.make_grid(value[:,:,:,:,20].to('cpu').detach())), self.current_epoch,)
+        print('loss',loss, loss_dict)
         return loss, loss_dict
+
 
     def training_step(self, batch, batch_idx, *args, **kwargs):
         mode = 'train'
@@ -136,12 +195,12 @@ class SimCLR_base(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument("--learning_rate", default=1e-4, type=float)
         parser.add_argument("--num_ft", default=16, type=int)
-        parser.add_argument("--z_dim", default=20, type=int)
+        parser.add_argument("--z_dim", default=20, type=int) #20
         parser.add_argument("--scheduler", default=True, type=str2bool, const=True, nargs='?')
         parser.add_argument("--temperature", default=0.5, type=float)
         parser.add_argument("--weight_decay", default=1e-6, type=float)
         parser.add_argument("--warmup_epochs", default=5, type=int)
-        parser.add_argument("--model_type", default= 'dc', type=str)
+        parser.add_argument("--model_type", default= 'CNN3D', type=str) #CNN3D #resnet18 #VGG
         parser.add_argument("--mlp_norm", default=False, type=str2bool, const=True, nargs='?')
         parser.add_argument("--augmentation", choices=['standard', 'standard-rot','standard-blur', 'ce', 'ce-blur', 'ce-no_crop', 'random_crop', 'random_crop-ce'],default='random_crop', type=str)
 
