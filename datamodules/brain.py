@@ -456,7 +456,7 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
 
 
         #I have to put this somewhere else. where??
-        annotation = pd.read_csv(os.path.join(self.base_dir[0].replace('/pre-processed/all',''), 'COPD_criteria_complete.csv'),
+        annotation = pd.read_csv(os.path.join(self.base_dir[0].replace('/pre-processed/no_resample',''), 'COPD_criteria_complete.csv'),
                                  sep=',', converters={'patient': lambda x: str(x)}) #insp_jacobian
 
         #drop missing values
@@ -513,7 +513,7 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
         for patient in list_patients:
             directories.append(os.path.join(base_dir[0], patient)+pattern.replace('*', ''))
 
-        annotation = pd.read_csv(os.path.join(base_dir[0].replace('/pre-processed/all',''), 'COPD_criteria_complete.csv'),
+        annotation = pd.read_csv(os.path.join(base_dir[0].replace('/pre-processed/no_resample',''), 'COPD_criteria_complete.csv'),
                                  sep=',', converters={'patient': lambda x: str(x)})
 
         annotation = annotation[annotation.notna()]

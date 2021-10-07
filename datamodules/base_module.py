@@ -63,6 +63,6 @@ class BaseDatamodule(pl.LightningDataModule):
         parser.add_argument("--input", default='insp', type=str, choices=['insp', 'insp_exp_reg', 'insp_jacobian', 'jacobian'])
         #Training specific arguments
         parser.add_argument("--val_size", default=0.1, type=float)
-        parser.add_argument("--num_workers", default=1, type=int)
+        parser.add_argument("--num_workers", default=8, type=int)
         return parser
 

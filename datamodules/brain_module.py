@@ -98,7 +98,7 @@ class BrainDataModule(pl.LightningDataModule):
         parser.add_argument("--batch_size", default=15, type=int) #12
         parser.add_argument("--mask_type", default=None, type=str)
         #Training specific arguments
-        parser.add_argument("--num_workers", default=1, type=int)
+        parser.add_argument("--num_workers", default=8, type=int)
         parser.add_argument("--dataset", default='brain', type=str) # choices=['brain'],type=str)
         parser.add_argument("--target_size", default=(50,50,50), type=int)
         parser.add_argument("--base_train", default='default', type=str)

@@ -17,14 +17,14 @@ datasets_common_args = {
     }
 
 datasets_train_args = {
-        'base_dir': [data_dir + '/all'], #insp_jacobian
+        'base_dir': [data_dir + '/no_resample'], #insp_jacobian
         #'slice_offset': 20,
         'num_processes': 12,
         #'tmp_dir': tmp_data_dir,
     }
 
 datasets_val_args = {
-        'base_dir': [data_dir + '/all'], #insp_jacobian
+        'base_dir': [data_dir + '/no_resample'], #insp_jacobian
         'n_items': 6400,
         'do_reshuffle': False,
         'mode': 'val',

@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
 
 
-    dir_data = '/home/silvia/Documents/CRADL/pre-processed/all'
+    dir_data = '/home/silvia/Documents/CRADL/pre-processed/no_resample'
 
     list_dir = os.listdir(dir_data)
 
@@ -99,7 +99,7 @@ if __name__ == "__main__":
 
     train_new = BrainDataLoader(base_dir=[dir_data], list_patients=data.list_IDs, n_items=None)
 
-    anomaly_train, anomaly_val = get_brain_dataset(base_dir=[dir_data],  mode="train", batch_size=12)
+    anomaly_train, anomaly_val = get_brain_dataset(base_dir=[dir_data],  mode="train", batch_size=20)
 
     train_loader, val_loader = get_brain_dataset_withoutSIMCLR(base_dir=[dir_data],  mode="train", batch_size=12)
     #print(train_new)
