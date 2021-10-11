@@ -153,7 +153,6 @@ eval_loader_args = {
 
 train_eval = {
       'mode' : 'val'
-        # 'mode' : 'train'
 }
 
 def get_brain_args(mode='eval',data_type='default', cond=False):
