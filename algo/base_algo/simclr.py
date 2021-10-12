@@ -200,7 +200,7 @@ class SimCLR_base(pl.LightningModule):
         parser.add_argument("--temperature", default=0.5, type=float)
         parser.add_argument("--weight_decay", default=1e-6, type=float)
         parser.add_argument("--warmup_epochs", default=5, type=int)
-        parser.add_argument("--model_type", default= 'CNN3D', type=str) #CNN3D #resnet18 #VGG
+        parser.add_argument("--model_type", default= 'resnet18', type=str) #CNN3D #resnet18 #VGG
         parser.add_argument("--mlp_norm", default=False, type=str2bool, const=True, nargs='?')
         parser.add_argument("--augmentation", choices=['standard', 'standard-rot','standard-blur', 'ce', 'ce-blur', 'ce-no_crop', 'random_crop', 'random_crop-ce'],default='random_crop', type=str)
 

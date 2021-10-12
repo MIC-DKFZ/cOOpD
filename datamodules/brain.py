@@ -460,21 +460,21 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
                                  sep=',', converters={'patient': lambda x: str(x)}) #insp_jacobian
 
         #drop missing values
-        #annotation = annotation.dropna(subset=['condition_COPD'])
-        #print(annotation['condition_COPD'])
+        #annotation = annotation.dropna(subset=['condition_COPD_GOLD'])
+        #print(annotation['condition_COPD_GOLD'])
         annotation = annotation[annotation.notna()]
-        annotation = annotation.dropna(subset=["condition_COPD"])
+        annotation = annotation.dropna(subset=["condition_COPD_GOLD"])
 
         # pd.set_option("display.max_rows", None, "display.max_columns", None)
-        # print(annotation['patient'], annotation['condition_COPD'])
+        # print(annotation['patient'], annotation['condition_COPD_GOLD'])
 
-        print(annotation.loc[annotation['patient'].str.lower() == img_idx.lower(), 'condition_COPD'].values)
+        print(annotation.loc[annotation['patient'].str.lower() == img_idx.lower(), 'condition_COPD_GOLD'].values)
         print(img_idx+'.nii.gz')
 
-        if annotation.loc[annotation['patient'].str.lower() == img_idx.lower(), 'condition_COPD'].values == []:
+        if annotation.loc[annotation['patient'].str.lower() == img_idx.lower(), 'condition_COPD_GOLD'].values == []:
             print('empty')
         else:
-            label = annotation.loc[annotation['patient'].str.lower() == img_idx.lower(), 'condition_COPD'].values
+            label = annotation.loc[annotation['patient'].str.lower() == img_idx.lower(), 'condition_COPD_GOLD'].values
             label = label.astype(int)
 
 
@@ -507,36 +507,55 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
 
     @staticmethod
     def load_dataset(base_dir, list_patients, pattern='*.npz'):
-        print(base_dir)
-        print(list_patients, len(list_patients))
-        directories = []
-        for patient in list_patients:
-            directories.append(os.path.join(base_dir[0], patient)+pattern.replace('*', ''))
-
-        annotation = pd.read_csv(os.path.join(base_dir[0].replace('/pre-processed/no_resample',''), 'COPD_criteria_complete.csv'),
-                                 sep=',', converters={'patient': lambda x: str(x)})
-
-        annotation = annotation[annotation.notna()]
-        annotation = annotation.dropna(subset=["condition_COPD"])
-        dir_folder = [os.path.basename(i).split('.')[0] for i in directories]
-        #print(dir_folder)
-        dir_csv = annotation['patient'].to_list()
-        dir_csv = [x.lower() for x in dir_csv]
-        dir_folder = [x.lower() for x in dir_folder]
-        # print(dir_csv)
-        # print(set(dir_folder).difference(dir_csv))
-        print('attention these npz files dont have labels:', list(set(dir_folder).difference(dir_csv)))
-        print('move npz file')
-        # for name_to_remove in list(set(dir_folder).difference(dir_csv)):
-        #     #print(name_to_remove)
-        #     dir_folder.remove(name_to_remove)
+        # print(base_dir)
+        # print(list_patients, len(list_patients))
+        # directories = []
+        # for patient in list_patients:
+        #     directories.append(os.path.join(base_dir[0], patient)+pattern.replace('*', ''))
         #
-        # print(set(dir_folder).difference(dir_csv))
-        directories = [base_dir[0] + '/' + sub + '.npz' for sub in dir_folder]
-        print('true training/test', len(directories))
-
-
-        return directories
+        # annotation = pd.read_csv(os.path.join(base_dir[0].replace('/pre-processed/no_resample',''), 'COPD_criteria_complete.csv'),
+        #                          sep=',', converters={'patient': lambda x: str(x)})
+        #
+        # annotation = annotation[annotation.notna()]
+        # annotation = annotation.dropna(subset=["condition_COPD_GOLD"])
+        # dir_folder = [os.path.basename(i).split('.')[0] for i in directories]
+        # #print(dir_folder)
+        # dir_csv = annotation['patient'].to_list()
+        # dir_csv = [x.lower() for x in dir_csv]
+        # dir_folder = [x.lower() for x in dir_folder]
+        # # print(dir_csv)
+        # # print(set(dir_folder).difference(dir_csv))
+        # print('attention these npz files dont have labels:', list(set(dir_folder).difference(dir_csv)))
+        # print('move npz file')
+        # # for name_to_remove in list(set(dir_folder).difference(dir_csv)):
+        # #     #print(name_to_remove)
+        # #     dir_folder.remove(name_to_remove)
+        # #
+        # # print(set(dir_folder).difference(dir_csv))
+        # directories = [base_dir[0] + '/' + sub + '.npz' for sub in dir_folder]
+        # print('true training/test', len(directories))
+        #
+        # healthy = annotation.loc[annotation['condition_COPD_GOLD'] == 0]
+        # COPD = annotation.loc[annotation['condition_COPD_GOLD'] == 1]
+        #
+        # # final_patient = []
+        # # for patient in directories:
+        # #     print(os.path.basename(patient).split('.')[0])
+        # #     final_patient.append(os.path.basename(patient).split('.')[0])
+        # final_patient = [os.path.basename(patient).split('.')[0] for patient in directories]
+        # print(final_patient)
+        # healthy[healthy['patient'].isin(final_patient)]
+        #
+        #
+        #
+        # print(healthy)
+        # print(COPD)
+        #
+        #
+        # #directories_for_pretext = random.choices(directories, k=)
+        #
+        #
+        # return directories
 
 
 
@@ -545,4 +564,56 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
         # directory_patient = [i for i in npy_files]
 
         #return directory_patient
+
+        annotation = pd.read_csv(os.path.join(base_dir[0].replace('/pre-processed/no_resample', ''), 'COPD_criteria_complete.csv'),
+                                 sep=',', converters={'patient': lambda x: str(x)})
+
+        annotation = annotation[annotation.notna()]
+        annotation = annotation.dropna(subset=["condition_COPD_GOLD"])
+        list_patients_low = [x.lower() for x in list_patients]
+        dir_csv = annotation['patient'].to_list()
+        dir_csv = [x.lower() for x in annotation]
+        print('attention these npz files dont have labels:', list(set(list_patients_low).difference(dir_csv)))
+        print('move npz file')
+
+        healthy = annotation.loc[annotation['condition_COPD_GOLD'] == 0]
+        COPD = annotation.loc[annotation['condition_COPD_GOLD'] == 1]
+
+        dir_csv_healthy = healthy['patient'].to_list()
+        dir_csv_healthy = [x.lower() for x in dir_csv_healthy]
+
+        print(list(set(list_patients_low).intersection(dir_csv_healthy)))
+        print(len(list(set(list_patients_low).intersection(dir_csv_healthy))))
+
+        healthy_list = list(set(list_patients_low).intersection(dir_csv_healthy))
+
+        dir_csv_copd = COPD['patient'].to_list()
+        dir_csv_copd = [x.lower() for x in dir_csv_copd]
+
+        print(list(set(list_patients_low).intersection(dir_csv_copd)))
+        print(len(list(set(list_patients_low).intersection(dir_csv_copd))))
+
+        copd_list = list(set(list_patients_low).intersection(dir_csv_copd))
+
+        directories_healthy = [base_dir[0] + '/' + sub + '.npz' for sub in healthy_list]
+        directories_copd = [base_dir[0] + '/' + sub + '.npz' for sub in copd_list]
+        print('final for training')
+        print('num_copd_random',len(random.choices(directories_copd, k=200)))
+        print('num_healthy',len(directories_healthy))
+
+
+        directories_for_pretext = random.choices(directories_copd, k=200) + directories_healthy
+
+        return directories_for_pretext
+
+
+
+
+
+
+
+
+
+
+
 
