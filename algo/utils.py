@@ -67,6 +67,11 @@ def norm(x, val_range=(0,1), in_range=(-1.5, 1.5)):
 
 ######################### ALRIGHT from here ############################
 
+def get_seg_im_gt(batch):
+    seg = batch["seg"].float() > 0.5
+    img_gt = (torch.sum(seg, dim=(1, 2, 3)) >= 1).to(dtype=torch.long).detach() #.tolist()
+    pixel_gt = seg.detach() #.tolist()
+    return img_gt, pixel_gt
 
 def exclude_from_wt_decay(named_params, weight_decay, skip_list=['bias', 'bn']):
     params = []

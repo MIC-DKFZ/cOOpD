@@ -14,10 +14,11 @@ from batchgenerators.transforms.utility_transforms import AddToDictTransform, Co
 from batchgenerators.transforms.abstract_transforms import AbstractTransform
 
 
+
 class DoubleHeadedTransform(AbstractTransform):
     def __init__(self, transform_i, transform_j):
         super().__init__()
-        self.transform_i = transform_i
+        self.transform_i = transform_i 
         self.transform_j = transform_j
 
     def __call__(self, **data_dict):
@@ -26,10 +27,9 @@ class DoubleHeadedTransform(AbstractTransform):
         out_dict_1['data'] = (out_dict_1['data'], out_dict_2['data'])
         # out_dict_1['data_2'] = out_dict_2['data']
         return out_dict_1
-
+    
     def __repr__(self):
-        return str(type(self).__name__) + " \t ( " + repr(self.transform_i) + "\n\t" + repr(self.transform_i) + " )"
-
+        return str(type(self).__name__) + " \t ( " + repr(self.transform_i) + "\n\t" + repr(self.transform_i)+ " )"
 
 class SplitHeadTransformation(AbstractTransform):
     def __init__(self, transform_base, transform_split):
@@ -40,36 +40,33 @@ class SplitHeadTransformation(AbstractTransform):
 
     def __call__(self, **data_dict):
         out_dict_base = self.transform_base(**data_dict)
-        out_dict_split = self.transform_split(**{'data': deepcopy(out_dict_base['data'])})
+        out_dict_split = self.transform_split(**{'data':deepcopy(out_dict_base['data'])})
         # out_dict_split = self.transform_base(**{'data':data_dict['data']})
-        out_dict_base['data'] = (
-        self.final_transform(**out_dict_base)['data'], self.final_transform(**out_dict_split)['data'])
+        out_dict_base['data'] = (self.final_transform(**out_dict_base)['data'], self.final_transform(**out_dict_split)['data'])
         return out_dict_base
 
     def __repr__(self):
-        return str(type(self).__name__) + " \t ( " + repr(self.transform_base) + "\n\t" + repr(
-            self.transform_base) + repr(self.transform_split) + " )"
-
+        return str(type(self).__name__) + " \t ( " + repr(self.transform_base) + "\n\t" + repr(self.transform_base)+repr(self.transform_split)+ " )"
 
 class RandomIntensityScale(AbstractTransform):
 
-    def __init__(self, prob: float = 0.5, factors: tuple = (-1, -1)):
+    def __init__(self, prob:float=0.5, factors: tuple=(-1, -1)):
         """Multiplies the intensity of an input with random values drawn in the range factors.
-
+        
 
         Args:
             prob ([type]): [Probability for the transformation]
             factors (tuple, optional): [Range of values from which factors are drawn]. Defaults to (-1, -1).
         """
         super().__init__()
-        self.prob = prob
+        self.prob= prob 
         self.factors = factors
+        
 
     def __call__(self, **data_dict):
-        if np.random.uniform() <= self.prob:
-            data_dict['data'] = data_dict['data'] * np.random.uniform(self.factors[0], self.factors[1])
+        if np.random.uniform()<= self.prob:
+            data_dict['data'] = data_dict['data']*np.random.uniform(self.factors[0], self.factors[1])
         return data_dict
-
 
 def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="", base_train='default',
                    rotate=True, elastic_deform=True, rnd_crop=False, color_augment=True,
@@ -145,11 +142,11 @@ def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="",
         elif mask_type == "context":
             noise_list += [BlankSquareNoiseTransform(squre_size=(0, target_size // 2),
                                                      noise_val=(-1.5, +1.5),
-                                                     n_squres=1, )]
+                                                     n_squres=1,)]
         elif mask_type == 'context_david':
             noise_list += [BlankSquareNoiseTransform(squre_size=(0, target_size // 2),
                                                      noise_val=(-1.5, +1.5),
-                                                     n_squres=1, )]
+                                                     n_squres=1,)]
         elif mask_type == "noise":
             noise_list += [BlankSquareNoiseTransform(squre_size=(0, target_size // 2),
                                                      noise_val=(-1.5, +1.5),

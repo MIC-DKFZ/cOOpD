@@ -46,7 +46,7 @@ def get_brain_datasets(common_args=None, trainset_args=None, valset_args=None, v
 
 
 class BrainDataModule(pl.LightningDataModule):
-    def __init__(self, batch_size:int, patch_size:int = (50,50,50),base_dir:list = [],*args, **kwargs):
+    def __init__(self, batch_size:int, double_headed:bool=False, mask_type:str = 'test', target_size:int = 128, transform_type='single', base_train='default',base_dir:list = [], mode='train',*args, **kwargs):
         super().__init__()
         self.args = {'batch_size':batch_size, "patch_size":patch_size}
 
@@ -55,6 +55,9 @@ class BrainDataModule(pl.LightningDataModule):
         self.common_args.update(**self.args)
         self.train_args = dict(**datasets_train_args)
         self.train_args['base_dir'] += base_dir
+
+        self.train_args['mode'] = mode
+
         self.val_args = dict(**datasets_val_args)
         self.val_args.update(val_args)
         self.val_ano_args = dict(**datasets_val_ano_args)
@@ -95,11 +98,12 @@ class BrainDataModule(pl.LightningDataModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument("--input", default='insp', type=str, choices=['insp', 'insp_exp_reg', 'insp_jacobian', 'jacobian'])
         parser.add_argument("--train_exposure", default=None, type=str)
-        parser.add_argument("--batch_size", default=15, type=int) #12
+        parser.add_argument("--batch_size", default=64, type=int)
         parser.add_argument("--mask_type", default=None, type=str)
         #Training specific arguments
-        parser.add_argument("--num_workers", default=8, type=int)
+        parser.add_argument("--num_workers", default=12, type=int)
         parser.add_argument("--dataset", default='brain', type=str) # choices=['brain'],type=str)
-        parser.add_argument("--target_size", default=(50,50,50), type=int)
+        parser.add_argument("--target_size", default=128, type=int)
         parser.add_argument("--base_train", default='default', type=str)
         return parser
+        

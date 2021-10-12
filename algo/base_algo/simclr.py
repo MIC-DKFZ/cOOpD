@@ -5,7 +5,8 @@ import torch
 import torchvision.utils as vutils
 from algo.utils import exclude_from_wt_decay, norm, process_batch
 from models.contrastive import SimCLR
-from pl_bolts.optimizers import LinearWarmupCosineAnnealingLR
+from pl_bolts.optimizers.lr_scheduler import linear_warmup_decay
+from pl_bolts.optimizers.lars import LARS
 from pyutils.parser import str2bool
 
 
@@ -21,10 +22,11 @@ class SimCLR_base(pl.LightningModule):
         self.z_dim = z_dim
         self.scheduler = scheduler
         self.warmup_epochs = warmup_epochs
-        self.hparams = hparams
+        # self.hparams = hparams
+        self.save_hyperparameters(hparams)
         self.show_input_every = 1000
         self.show_n = 64
-        #print(self.model)
+        print(self.model)
 
     def forward(self, x):
         return self.model(x)
@@ -168,19 +170,23 @@ class SimCLR_base(pl.LightningModule):
         # opt = torch.optim.Adam(params, lr=self.learning_rate, betas=(b1, b2))
         if self.optim=='adam':
             opt = torch.optim.Adam(params, lr=self.learning_rate, betas=(0.9, 0.999))
+        elif self.optim=='lars':
+            opt = LARS(
+                params,
+                lr=self.learning_rate,
+                momentum=0.9,
+                weight_decay=self.weight_decay,
+                trust_coefficient=0.001,
+            )
         else:
             raise NotImplementedError
         if self.scheduler:
             warm_steps = self.warmup_epochs * self.train_iters_per_epoch
             max_steps = self.trainer.max_epochs * self.train_iters_per_epoch
-            lin_scheduler = LinearWarmupCosineAnnealingLR(
-                optimizer=opt, 
-                warmup_epochs = warm_steps,
-                max_epochs = max_steps,
-                warmup_start_lr=0,
-                eta_min=0
-            )
-            
+            lin_scheduler = torch.optim.lr_scheduler.LambdaLR(
+                    optimizer=opt,
+                    lr_lambda=linear_warmup_decay(warm_steps, max_steps, cosine=True),
+                )
 
             scheduler = {
                 'scheduler' : lin_scheduler,
@@ -195,7 +201,7 @@ class SimCLR_base(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument("--learning_rate", default=1e-4, type=float)
         parser.add_argument("--num_ft", default=16, type=int)
-        parser.add_argument("--z_dim", default=20, type=int) #20
+        parser.add_argument("--z_dim", default=20, type=int)
         parser.add_argument("--scheduler", default=True, type=str2bool, const=True, nargs='?')
         parser.add_argument("--temperature", default=0.5, type=float)
         parser.add_argument("--weight_decay", default=1e-6, type=float)

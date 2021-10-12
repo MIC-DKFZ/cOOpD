@@ -76,12 +76,13 @@ class INN_exp(pl.LightningModule):
 
         return [optimizer], [scheduler]
 
-    def forward(self, x, inference=True):
+    def forward(self, x, inference=True, rev=False):
+        """Forward Pass of the Invertible Neural Network with additional Gradients"""
         x = (x-self.in_means)/self.in_stds
         if inference is False:
             x += torch.randn(x.shape, device=x.device)*self.eps
-        z = self.model.forward(x)
-        return z 
+        z, log_jac_det = self.model.forward(x)
+        return z, log_jac_det 
         
         
     def training_step(self, batch, batch_idx, *args, **kwargs):
@@ -103,14 +104,14 @@ class INN_exp(pl.LightningModule):
 
         
     def shared_step(self, x):
-        z = self.forward(x, inference=False)
-        loss = 0.5*(torch.pow(z, 2)/2).sum(dim=1) - self.model.log_jacobian(run_forward=False)
+        z, log_jac_det = self.forward(x, inference=False)
+        loss = 0.5*(torch.pow(z, 2)/2).sum(dim=1) - log_jac_det
         loss = loss.mean()
         return loss, None
     
     def get_scores(self, x, eps=0):
-        z = self.forward(x, inference=True)
-        scores = 0.5*(torch.pow(z, 2)).sum(dim=1) - self.model.log_jacobian(run_forward=False)
+        z, log_jac_det = self.forward(x, inference=True)
+        scores = 0.5*(torch.pow(z, 2)).sum(dim=1) - log_jac_det
         return scores
 
     def load_state_dict(self, state_dict, strict=True):
@@ -211,15 +212,9 @@ class INN_latent(Abstract_OOD):
             gradient_clip_val=5., benchmark=True, progress_bar_refresh_rate=progress_bar_refresh_rate)
 
         train_dataloader = Loader_in["Train"]
-        if "Valin" in Loader_in.keys():
-            val_dataloader = Loader_in["Valin"]
-            test_dataloader = Loader_in["Val"]
-        else:
-            val_dataloader = Loader_in["Val"]
-            test_dataloader = Loader_in["Test"]
+        val_dataloader = Loader_in['Valin']
 
         trainer.fit(model=self.model,train_dataloader=train_dataloader, val_dataloaders=val_dataloader)
-        trainer.test(test_dataloaders=test_dataloader)
         self.train_path = self.model.logger.experiment.log_dir
 
     def get_score(self, X, *args, **kwargs):
