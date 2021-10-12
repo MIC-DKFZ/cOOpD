@@ -48,13 +48,13 @@ def save_outputs(path, resave=False, num_epoch=1, get_slice_idx=True):
         loader_dict = {'train': datamodule.train_dataloader(), 'val':datamodule.val_dataloader()}
         
         data_dict = dict()
-
+        # from pdb import set_trace as bp 
+        # bp()
         for key1, key2 in zip(keys, ['train', 'val']):
-            if get_slice_idx:
-                if key1 =='Train':
-                    data_dict[key1]= get_label_latent(experiment, loader_dict[key2], get_slice=get_slice_idx, num_epoch=num_epoch)
-                else:
-                    data_dict[key1]= get_label_latent(experiment, loader_dict[key2], get_slice=get_slice_idx)
+            if key1 =='Train':
+                data_dict[key1]= get_label_latent(experiment, loader_dict[key2], get_slice=get_slice_idx, num_epoch=num_epoch)
+            else:
+                data_dict[key1]= get_label_latent(experiment, loader_dict[key2], get_slice=get_slice_idx)
             
         if os.path.exists(tmp_dir) is False:
             os.mkdir(tmp_dir)

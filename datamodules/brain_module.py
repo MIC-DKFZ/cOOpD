@@ -46,7 +46,7 @@ def get_brain_datasets(common_args=None, trainset_args=None, valset_args=None, v
 
 
 class BrainDataModule(pl.LightningDataModule):
-    def __init__(self, batch_size:int, double_headed:bool=False, mask_type:str = 'test', target_size:int = 128, transform_type='single', base_train='default',base_dir:list = [], mode='train',*args, **kwargs):
+    def __init__(self, batch_size:int= 128, double_headed:bool=False, mask_type:str = 'test', target_size:int = 128, transform_type='single', base_train='default',base_dir:list = [], mode='train',*args, **kwargs):
         super().__init__()
         self.args = {'batch_size':batch_size, 'double_headed':double_headed, 'mask_type':mask_type, 'transform_type':transform_type, 'base_train':base_train, "target_size":target_size}
         if double_headed or transform_type =='split':
@@ -98,12 +98,12 @@ class BrainDataModule(pl.LightningDataModule):
         #Dataset specific arguments
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument("--train_exposure", default=None, type=str)
-        parser.add_argument("--batch_size", default=64, type=int)
-        parser.add_argument("--mask_type", default=None, type=str)
+        parser.add_argument("--batch_size", default=512, type=int)
+        parser.add_argument("--mask_type", default='test', type=str)
         #Training specific arguments
         parser.add_argument("--num_workers", default=12, type=int)
-        parser.add_argument("--dataset", default='brain', type=str) # choices=['brain'],type=str)
+        parser.add_argument("--dataset", default='brain', type=str)
         parser.add_argument("--target_size", default=128, type=int)
-        parser.add_argument("--base_train", default='default', type=str)
+        parser.add_argument("--base_train", default='random_crop', type=str)
         return parser
         

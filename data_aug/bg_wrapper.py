@@ -84,13 +84,10 @@ def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="",
 
     if mode == "train":
         if base_train == 'default':
-            transform_list = [#FillupPadTransform(min_size=(target_size1 + 5, target_size2 + 5)),
+            transform_list = [
                             ResizeTransform(target_size=(target_size1 + 1, target_size2 + 1),
                                             order=1, concatenate_list=True),
-
-                            # RandomCropTransform(crop_size=(target_size + 5, target_size + 5)),
                             MirrorTransform(axes=(2,)),
-                            # ReshapeTransform(new_shape=(1, -1, "h", "w")),
                             SpatialTransform(patch_size=(target_size1, target_size2), random_crop=rnd_crop,
                                             patch_center_dist_from_border=(target_size1 // 2, target_size2 // 2),
                                             do_elastic_deform=elastic_deform, alpha=(0., 100.), sigma=(10., 13.),
@@ -98,17 +95,13 @@ def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="",
                                             angle_x=(-0.1, 0.1), angle_y=(0, 1e-8), angle_z=(0, 1e-8),
                                             scale=(0.9, 1.2),
                                             border_mode_data="nearest", border_mode_seg="nearest"),
-                            # ReshapeTransform(new_shape=(batch_size, -1, "h", "w"))
                             ]
         elif base_train == 'random_crop':
             rnd_crop = True
-            transform_list = [#FillupPadTransform(min_size=(target_size1 + 5, target_size2 + 5)),
+            transform_list = [
                             ResizeTransform(target_size=(target_size1 + 1, target_size2 + 1),
                                             order=1, concatenate_list=True),
-
-                            # RandomCropTransform(crop_size=(target_size + 5, target_size + 5)),
                             MirrorTransform(axes=(2,)),
-                            # ReshapeTransform(new_shape=(1, -1, "h", "w")),
                             SpatialTransform(patch_size=(target_size1, target_size2), random_crop=rnd_crop,
                                             patch_center_dist_from_border=(target_size1 // 3, target_size2 // 3),
                                             do_elastic_deform=elastic_deform, alpha=(0., 100.), sigma=(10., 13.),
@@ -116,22 +109,19 @@ def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="",
                                             angle_x=(-0.1, 0.1), angle_y=(0, 1e-8), angle_z=(0, 1e-8),
                                             scale=(0.9, 1.2),
                                             border_mode_data="nearest", border_mode_seg="nearest"),
-                            # ReshapeTransform(new_shape=(batch_size, -1, "h", "w"))
                             ]
         else:
             raise NotImplementedError
         if color_augment:
-            transform_list += [  # BrightnessTransform(mu=0, sigma=0.2),
+            transform_list += [ 
                 BrightnessMultiplicativeTransform(multiplier_range=(0.95, 1.1))]
 
         transform_list += [
             GaussianNoiseTransform(noise_variance=(0., 0.05)),
             ClipValueRange(min=-1.5, max=1.5),
-            # CopyTransform({"data": ("data_clean", "data_blur")}, copy=True),
-            # GaussianBlurTransform(blur_sigma=3.5, data_key="data_blur")
         ]
 
-        noise_list = []  # [GaussianNoiseTransform(noise_variance=(0., 0.2))]
+        noise_list = []  
 
         if mask_type == "blank":
             noise_list += [BlankSquareNoiseTransform(squre_size=(target_size // 2),
@@ -154,10 +144,6 @@ def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="",
                                                      channel_wise_n_val=True)]
         elif mask_type == "test":
             pass
-            # noise_list += [SquareMaskTransform(squre_size=(0, np.max(target_size) // 2),
-            #                                    noise_val=(-1.5, +1.5),
-            #                                    n_squres=(0, 3),
-            #                                    channel_wise_n_val=True)]
 
         elif mask_type == 'noise_rnd_scale':
             noise_list += [RandomIntensityScale(), BlankSquareNoiseTransform(squre_size=(0, target_size // 2),
@@ -179,33 +165,13 @@ def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="",
 
     elif mode == "val":
 
-        transform_list = [#FillupPadTransform(min_size=(target_size1 + 5, target_size2 + 5)),
+        transform_list = [
                          ResizeTransform(target_size=(target_size1 + 1, target_size2 + 1),
                                          order=1, concatenate_list=True),
                          CenterCropTransform(crop_size=(target_size1, target_size2)),
                          ClipValueRange(min=-1.5, max=1.5),
-                         # BrightnessTransform(mu=0, sigma=0.2),
-                         # BrightnessMultiplicativeTransform(multiplier_range=(0.95, 1.1)),
-                         # CopyTransform({"data": "data_clean"}, copy=True)
                          ]
 
-        # noise_list = [CopyTransform({"data": ("data_clean", "data_blur")}, copy=True)]
-        #
-        # if mask_type == "blank":
-        #     noise_list += [CopyTransform({"data": ("data_mask_1", "data_mask_2",
-        #                                            "data_mask_3", "data_mask_4")}, copy=True),
-        #                    BlankSquareNoiseTransform(squre_size=(target_size // 2), noise_val=0, n_squres=1,
-        #                                              square_pos=[(0, 0)], data_key="data_mask_1"),
-        #                    BlankSquareNoiseTransform(squre_size=(target_size // 2), noise_val=0, n_squres=1,
-        #                                              square_pos=[(target_size // 2, 0)], data_key="data_mask_2"),
-        #                    BlankSquareNoiseTransform(squre_size=(target_size // 2), noise_val=0, n_squres=1,
-        #                                              square_pos=[(0, target_size // 2)], data_key="data_mask_3"),
-        #                    BlankSquareNoiseTransform(squre_size=(target_size // 2), noise_val=0, n_squres=1,
-        #                                              square_pos=[(target_size // 2, target_size // 2)],
-        #                                              data_key="data_mask_4")]
-        #
-        # noise_list += [  # GaussianNoiseTransform(noise_variance=(0.1, 0.2)),
-        #     GaussianBlurTransform(blur_sigma=1.5, data_key="data_blur")]
 
     if transform_type == 'split':
         final_transform = SplitHeadTransformation(Compose(transform_list), Compose(noise_list))
@@ -213,30 +179,6 @@ def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="",
     if add_noise:
         transform_list = transform_list + noise_list
 
-    # if add_resize:
-    #     resize_list = [
-    #         CopyTransform({"seg": "label"}, copy=True),
-    #
-    #         CopyTransform({"data": "data_1"}, copy=True),
-    #         ZoomTransform(zoom_factors=(1, 1, 0.5, 0.5), order=1),
-    #         CopyTransform({"data": "data_2"}, copy=True),
-    #         ZoomTransform(zoom_factors=(1, 1, 0.5, 0.5), order=1),
-    #         CopyTransform({"data": "data_3"}, copy=True),
-    #         ZoomTransform(zoom_factors=(1, 1, 0.5, 0.5), order=1),
-    #         CopyTransform({"data": "data_4"}, copy=True),
-    #         CopyTransform({"data_1": "data"}, copy=True),
-    #
-    #         CopyTransform({"data_clean": "data_clean_1"}, copy=True),
-    #         ZoomTransform(zoom_factors=(1, 1, 0.5, 0.5), order=1, data_key="data_clean"),
-    #         CopyTransform({"data_clean": "data_clean_2"}, copy=True),
-    #         ZoomTransform(zoom_factors=(1, 1, 0.5, 0.5), order=1, data_key="data_clean"),
-    #         CopyTransform({"data_clean": "data_clean_3"}, copy=True),
-    #         ZoomTransform(zoom_factors=(1, 1, 0.5, 0.5), order=1, data_key="data_clean"),
-    #         CopyTransform({"data_clean": "data_clean_4"}, copy=True),
-    #         CopyTransform({"data_clean_1": "data_clean"}, copy=True),
-    #     ]
-    #
-    #     tranform_list = tranform_list + resize_list
 
     if transform_type == 'split':
         final_transform = SplitHeadTransformation(Compose(transform_list), Compose(noise_list))
