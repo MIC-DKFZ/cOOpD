@@ -7,24 +7,27 @@ tmp_data_dir = None
 
 
 datasets_common_args = {
-        'batch_size': 15, #12
-        'patch_size': (50,50,50),
+        'batch_size': 64, #12 #64
+        'patch_size': (1,30,30,30),
         'elastic_deform': False,
         'rnd_crop': True,
         'rotate': True,
-        'num_threads_in_multithreaded': 1
+        'num_threads_in_multithreaded': 1,
+        'double_headed': False,
+        #'step': 'pretext'
         #'base_train' : 'default'
     }
 
 datasets_train_args = {
-        'base_dir': [data_dir + '/no_resample'], #insp_jacobian
+        'base_dir': [data_dir + '/all_no_resample'], #insp_jacobian
         #'slice_offset': 20,
         'num_processes': 12,
+        #'step': 'pretext' #I think this should be here instead of in common_args. Review in new training
         #'tmp_dir': tmp_data_dir,
     }
 
 datasets_val_args = {
-        'base_dir': [data_dir + '/no_resample'], #insp_jacobian
+        'base_dir': [data_dir + '/all_no_resample'], #insp_jacobian
         'n_items': 6400,
         'do_reshuffle': False,
         'mode': 'val',
@@ -34,120 +37,128 @@ datasets_val_args = {
     }
 
 datasets_val_ano_args = {
-        "base_dir": [ data_dir + "/brain/hcp_syn_ano/from_imgs_default/"],
+        "base_dir": [data_dir + '/all_no_resample'],
         "n_items": 6400,
         "do_reshuffle": False,
         "mode": "val",
         "num_processes": 4,
         #"slice_offset": 10,
         #"label_slice": 2,
-        "tmp_dir": tmp_data_dir,
+        #"tmp_dir": tmp_data_dir,
     }
 
 datasets_test_args = {
-        "base_dir": [ data_dir + "/brain/hcp_syn_ano/from_imgs/"],
+        "base_dir": [data_dir + '/all_no_resample'],
         "n_items": 6400,
         "do_reshuffle": False,
         "mode": "val",
         "num_processes": 4,
         #"slice_offset": 10,
         #"label_slice": 2,
-        "tmp_dir": tmp_data_dir,
+        #"tmp_dir": tmp_data_dir
     }
 
 eval_val_ano_args = {
-        'base_dir':[data_dir+ '/brain/hcp_syn_ano/from_imgs_val/'],
+        'base_dir':[data_dir + '/all_no_resample'],
         'n_items': None,
         'do_reshuffle': False,
         'mode': 'val',
         'num_processes': 4,
         #'slice_offset': 10,
         #'label_slice': 2,
-        'tmp_dir': tmp_data_dir,
+        #'tmp_dir': tmp_data_dir
     }
 
 eval_test_args = {
-        'base_dir':[data_dir+ '/brain/hcp_syn_ano/from_imgs_test/'], 
+        'base_dir':[data_dir + '/all_no_resample'],
         'n_items': None,
         'do_reshuffle': False,
         'mode': 'val',
         'num_processes': 4,
         #'slice_offset': 10,
         #'label_slice': 2,
-        'tmp_dir': tmp_data_dir,
+        #'tmp_dir': tmp_data_dir
     }
 
 
 eval_loader_args = {
-    'hcp_syn_fast' : {
-        'base_dir': data_dir + '/brain/hcp_syn_ano/from_imgs_val' ,
-        'n_items' : 1000,
+    # 'hcp_syn_fast' : {
+    #     'base_dir': data_dir + '/brain/hcp_syn_ano/from_imgs_val' ,
+    #     'n_items' : 1000,
+    #     'do_reshuffle': False,
+    #     'mode': 'val',
+    #     'num_processes': 8,
+    #     #'slice_offset': 10,
+    #     '#label_slice': 2,
+    #     'tmp_dir': tmp_data_dir
+    # },
+    # 'hcp_syn_val' : {
+    #     'base_dir': data_dir + '/brain/hcp_syn_ano/from_imgs_val' ,
+    #     'n_items' : None,
+    #     'do_reshuffle': False,
+    #     'mode': 'val',
+    #     'num_processes': 8,
+    #     #'slice_offset': 10,
+    #     #'label_slice': 2,
+    #     'tmp_dir': tmp_data_dir
+    # },
+    # 'hcp_syn_test' : {
+    #     'base_dir': data_dir + '/brain/hcp_syn_ano/from_imgs_test' ,
+    #     'n_items' : None,
+    #     'do_reshuffle': False,
+    #     'mode': 'val',
+    #     'num_processes': 8,
+    #     'slice_offset': 10,
+    #     'label_slice': 2,
+    #     'tmp_dir': tmp_data_dir
+    # },
+    # 'brats' : {
+    #     'base_dir': data_dir + '/brain/brats17_test' ,
+    #     'n_items' : None,
+    #     'do_reshuffle': False,
+    #     'mode': 'val',
+    #     'num_processes': 8,
+    #     'slice_offset': 10,
+    #     'label_slice': 2,
+    #     'tmp_dir': tmp_data_dir,
+    # },
+    # 'isles' : {
+    #     'base_dir': data_dir + '/brain/isles15_siss_test',
+    #     'n_items' : None,
+    #     'do_reshuffle': False,
+    #     'mode': 'val',
+    #     'num_processes': 8,
+    #     'slice_offset': 10,
+    #     'label_slice': 2,
+    #     'tmp_dir': tmp_data_dir,
+    # },
+    # 'isles_val':{
+    #     'base_dir': data_dir + '/brain/isles15_siss',
+    #     'n_items' : None,
+    #     'do_reshuffle': False,
+    #     'mode': 'val',
+    #     'num_processes': 8,
+    #     'slice_offset': 10,
+    #     'label_slice': 2,
+    #     'tmp_dir': tmp_data_dir,
+    # },
+    # 'brats_val':{
+    #     'base_dir' : data_dir + '/brain/brats17',
+    #     'n_items' : None,
+    #     'do_reshuffle': False,
+    #     'mode': 'val',
+    #     'num_processes': 8,
+    #     'slice_offset': 10,
+    #     'label_slice': 2,
+    #     'tmp_dir': tmp_data_dir,
+    # },
+    'lung_val': {
+        'base_dir': [data_dir + '/all_no_resample'],
+        'n_items': None,
         'do_reshuffle': False,
         'mode': 'val',
         'num_processes': 8,
-        #'slice_offset': 10,
-        '#label_slice': 2,
-        'tmp_dir': tmp_data_dir,
-    },
-    'hcp_syn_val' : {
-        'base_dir': data_dir + '/brain/hcp_syn_ano/from_imgs_val' ,
-        'n_items' : None,
-        'do_reshuffle': False,
-        'mode': 'val',
-        'num_processes': 8,
-        #'slice_offset': 10,
-        #'label_slice': 2,
-        'tmp_dir': tmp_data_dir,
-    },
-    'hcp_syn_test' : {
-        'base_dir': data_dir + '/brain/hcp_syn_ano/from_imgs_test' ,
-        'n_items' : None,
-        'do_reshuffle': False,
-        'mode': 'val',
-        'num_processes': 8,
-        'slice_offset': 10,
-        'label_slice': 2,
-        'tmp_dir': tmp_data_dir,
-    },
-    'brats' : {
-        'base_dir': data_dir + '/brain/brats17_test' ,
-        'n_items' : None,
-        'do_reshuffle': False,
-        'mode': 'val',
-        'num_processes': 8,
-        'slice_offset': 10,
-        'label_slice': 2,
-        'tmp_dir': tmp_data_dir,
-    },
-    'isles' : {
-        'base_dir': data_dir + '/brain/isles15_siss_test',
-        'n_items' : None,
-        'do_reshuffle': False,
-        'mode': 'val',
-        'num_processes': 8,
-        'slice_offset': 10,
-        'label_slice': 2,
-        'tmp_dir': tmp_data_dir,
-    },
-    'isles_val':{
-        'base_dir': data_dir + '/brain/isles15_siss',
-        'n_items' : None,
-        'do_reshuffle': False,
-        'mode': 'val',
-        'num_processes': 8,
-        'slice_offset': 10,
-        'label_slice': 2,
-        'tmp_dir': tmp_data_dir,
-    },
-    'brats_val':{
-        'base_dir' : data_dir + '/brain/brats17',
-        'n_items' : None,
-        'do_reshuffle': False,
-        'mode': 'val',
-        'num_processes': 8,
-        'slice_offset': 10,
-        'label_slice': 2,
-        'tmp_dir': tmp_data_dir,
+        'step': 'eval'
     }
 }
 

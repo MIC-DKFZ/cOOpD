@@ -10,7 +10,7 @@ from algo.model import load_best_model, get_label_latent
 from config.latent_model import filename, model_dicts, tmp, suffix, rel_save
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str)
+parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/pretext/brain/simclr-CNN3D/default/version_562')
 parser.add_argument('--num_epoch', type=int, default=1)
 parser.add_argument('--resave', type=str2bool, nargs='?', const=True, default=False)
 
@@ -37,16 +37,19 @@ def save_outputs(path, resave=False, num_epoch=1, get_slice_idx=True):
     tmp_dir = os.path.join(path, tmp)
     suffix = '_data'
     keys = ['Train', 'Valin']
+    print(all([os.path.exists(os.path.join(tmp_dir, key.lower()+suffix+'.npz')) for key in keys]))
     if not (all([os.path.exists(os.path.join(tmp_dir, key.lower()+suffix+'.npz')) for key in keys]) and resave is False):
         experiment, args = load_best_model(path)
         experiment = experiment.to('cuda:0')
-        mode='val'
+        mode='fit'
         if num_epoch != 1:
             mode = 'train'
-        datamodule = BrainDataModule(mode=mode)
+        datamodule = BrainDataModule(mode=mode, batch_size=64, step = 'fitting_GMM')
 
-        loader_dict = {'train': datamodule.train_dataloader(), 'val':datamodule.val_dataloader()}
-        
+        #loader_dict = {'train': datamodule.train_dataloader(), 'val':datamodule.val_dataloader()}
+        train_loader, val_loader = datamodule.train_dataloader()
+        loader_dict = {'train': train_loader, 'val': val_loader}
+
         data_dict = dict()
         # from pdb import set_trace as bp 
         # bp()
@@ -100,4 +103,4 @@ if __name__ == "__main__":
     path = args.path 
     resave =  args.resave 
     num_epoch = args.num_epoch
-    main(path, resave=resave, num_epoch=num_epoch)
+    main(path, resave=True, num_epoch=num_epoch) #resave

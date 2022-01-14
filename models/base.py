@@ -277,8 +277,8 @@ class ResNet_Encoder(nn.Module):
                             "resnet50": ResNet50()}
 
         self.resnet = self._get_basemodel(base_model)
-        #num_ftrs = self.resnet.fc.in_features
-        num_ftrs = self.resnet.linear.in_features
+        num_ftrs = self.resnet.fc.in_features
+        #num_ftrs = self.resnet.linear.in_features
 
 
         #change 1st convolution to work with inputs [channels_in x patch_x x patch_y x patch_z]
@@ -392,7 +392,11 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 128, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 256, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 512, num_blocks[3], stride=2)
-        self.linear = nn.Linear(512*block.expansion, num_classes)
+        self.fc = nn.Linear(512*block.expansion, num_classes)
+        if num_blocks[3] == 2:
+            self.z_dim = 512
+        else:
+            self.z_dim = 2048
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1]*(num_blocks-1)
@@ -447,15 +451,16 @@ cfg = {
 
 
 class VGG(nn.Module):
-    def __init__(self, vgg_name, in_channels):
+    def __init__(self, vgg_name, in_channels, out_channels: int = 256):
         super(VGG, self).__init__()
         self.features = self._make_layers(cfg[vgg_name], in_channels)
-        self.classifier = nn.Linear(512, 20) #10
+        #self.classifier = nn.Linear(512, out_channels) #10
+        self.z_dim = out_channels
 
     def forward(self, x):
         out = self.features(x)
         out = out.view(out.size(0), -1)
-        out = self.classifier(out)
+        #out = self.classifier(out)
         return out
 
     def _make_layers(self, cfg, in_channels):

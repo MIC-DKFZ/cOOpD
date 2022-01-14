@@ -36,11 +36,11 @@ class SimCLR_base(pl.LightningModule):
 
     def shared_step(self, batch, sum_samples=True, mode='train', vis=False, ano=False):
         #print(batch)
-        print('reached_batch_form', batch['patient_name'], batch['label'])
-        print('batch_size')
-        print(len(batch['data'][0]))
-        print(len(batch['data'][1]))
-        print(len(batch['label']))
+        print('reached_batch_form', batch['patient_name'], batch['label'], batch['patch_num'])
+        # print('batch_size')
+        # print(len(batch['data'][0]))
+        # print(len(batch['data'][1]))
+        # print(len(batch['label']))
 
         try:
             from batchviewer import view_batch
@@ -201,12 +201,12 @@ class SimCLR_base(pl.LightningModule):
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
         parser.add_argument("--learning_rate", default=1e-4, type=float)
         parser.add_argument("--num_ft", default=16, type=int)
-        parser.add_argument("--z_dim", default=20, type=int)
+        parser.add_argument("--z_dim", default=512, type=int) #20
         parser.add_argument("--scheduler", default=True, type=str2bool, const=True, nargs='?')
         parser.add_argument("--temperature", default=0.5, type=float)
         parser.add_argument("--weight_decay", default=1e-6, type=float)
         parser.add_argument("--warmup_epochs", default=5, type=int)
-        parser.add_argument("--model_type", default= 'resnet18', type=str) #CNN3D #resnet18 #VGG
+        parser.add_argument("--model_type", default= 'VGG', type=str) #CNN3D #resnet18 #VGG
         parser.add_argument("--mlp_norm", default=False, type=str2bool, const=True, nargs='?')
         parser.add_argument("--augmentation", choices=['standard', 'standard-rot','standard-blur', 'ce', 'ce-blur', 'ce-no_crop', 'random_crop', 'random_crop-ce'],default='random_crop', type=str)
 

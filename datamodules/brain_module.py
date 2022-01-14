@@ -46,17 +46,24 @@ def get_brain_datasets(common_args=None, trainset_args=None, valset_args=None, v
 
 
 class BrainDataModule(pl.LightningDataModule):
-    def __init__(self, batch_size:int, double_headed:bool=False, mask_type:str = 'test', target_size:int = 128, transform_type='single', base_train='default',base_dir:list = [], mode='train',*args, **kwargs):
+    #def __init__(self, batch_size:int, patch_size:int = (50,50,50),base_dir:list = [],*args, **kwargs):
+    def __init__(self, batch_size: int = 64, double_headed: bool = False, patch_size:int = (50,50,50),
+                 base_train='default', base_dir: list = [], mode='train', step='pretext', *args, **kwargs):
         super().__init__()
-        self.args = {'batch_size':batch_size, "patch_size":patch_size}
+        #self.args = {'batch_size':batch_size, "patch_size":patch_size}
+        self.args = {'batch_size':batch_size, 'double_headed':double_headed,
+                    'base_train':base_train, "patch_size":patch_size, 'step': step}
 
-        val_args= {}
+        if double_headed: #or transform_type == 'split':
+            val_args = {"mode": "train"}
+        else:
+            val_args = {}
         self.common_args = dict(**datasets_common_args)
         self.common_args.update(**self.args)
         self.train_args = dict(**datasets_train_args)
         self.train_args['base_dir'] += base_dir
 
-        self.train_args['mode'] = mode
+        #self.train_args['mode'] = mode
 
         self.val_args = dict(**datasets_val_args)
         self.val_args.update(val_args)
@@ -74,11 +81,11 @@ class BrainDataModule(pl.LightningDataModule):
     def train_dataloader(self):
         return get_brain_dataset(**self.common_args, **self.train_args)
 
-    # def val_dataloader(self):
-    #     return get_brain_dataset(**self.common_args, **self.val_args)
+    def val_dataloader(self):
+        return get_brain_dataset(**self.common_args, **self.val_args)
 
-    # def test_dataloader(self):
-    #     return get_brain_dataset(**self.common_args, **self.test_args)
+    def test_dataloader(self):
+        return get_brain_dataset(**self.common_args, **self.test_args)
 
     def get_ano_loader(self):
         raise NotImplementedError
@@ -103,7 +110,8 @@ class BrainDataModule(pl.LightningDataModule):
         #Training specific arguments
         parser.add_argument("--num_workers", default=12, type=int)
         parser.add_argument("--dataset", default='brain', type=str) # choices=['brain'],type=str)
-        parser.add_argument("--target_size", default=128, type=int)
+        parser.add_argument("--target_size", default=(50,50,50), type=int)
         parser.add_argument("--base_train", default='default', type=str)
+        parser.add_argument("--step", default='pretext', type=str, choices=['pretext', 'fitting_GMM', 'eval', 'test'])
         return parser
         

@@ -4,6 +4,7 @@ import numpy as np
 
 from batchgenerators.transforms import BrightnessMultiplicativeTransform, BrightnessTransform, GaussianNoiseTransform, \
     MirrorTransform, SpatialTransform
+from batchgenerators.transforms.spatial_transforms import SpatialTransform_2
 from batchgenerators.transforms.abstract_transforms import Compose, RndTransform
 from batchgenerators.transforms.color_transforms import ClipValueRange
 from batchgenerators.transforms.crop_and_pad_transforms import CenterCropTransform, PadTransform #, FillupPadTransform
@@ -13,7 +14,15 @@ from batchgenerators.transforms.utility_transforms import AddToDictTransform, Co
     ReshapeTransform
 from batchgenerators.transforms.abstract_transforms import AbstractTransform
 
-
+class SimCLRDataTransform(object):
+    def __init__(self, transform):
+        self.transform = transform
+    def __call__(self, **data_dict):
+        #print('transf', data_dict['data'].shape)
+        xi = self.transform(**data_dict)
+        xj = self.transform(**data_dict)
+        xi['data'] = (xi['data'], xj['data'])
+        return xi
 
 class DoubleHeadedTransform(AbstractTransform):
     def __init__(self, transform_i, transform_j):
@@ -68,7 +77,7 @@ class RandomIntensityScale(AbstractTransform):
             data_dict['data'] = data_dict['data']*np.random.uniform(self.factors[0], self.factors[1])
         return data_dict
 
-def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="", base_train='default',
+def get_transforms(mode="train", target_size=32, add_noise=False, mask_type="", base_train='default',
                    rotate=True, elastic_deform=True, rnd_crop=False, color_augment=True,
                    add_transforms=(), double_headed=False, transform_type='single'):
     transform_list = []
@@ -254,15 +263,14 @@ def get_transforms(mode="train", target_size=128, add_noise=False, mask_type="",
     return final_transform
 
 
-def get_simclr_pipeline_transform(mode='train', patch_size=(50,50,50), base_train = 'default', rnd_crop=True,
-                                  elastic_deform=True, rotate=True):
-    # we now create a list of transforms. These are not necessarily the best transforms to use for BraTS, this is just
-    # to showcase some things
+def get_simclr_pipeline_transform(mode='train', patch_size=(1,30,30,30), base_train = 'default', rnd_crop=False,
+                                  elastic_deform=True, rotate=True, double_headed=False):
+
     tr_transforms = []
 
     if mode == "train":
         if base_train == 'default':
-
+            # global transformations
             tr_transforms.append(MirrorTransform(axes=(2,)),) #axes (tuple of int): axes along which to mirror
             tr_transforms.append(BrightnessMultiplicativeTransform(multiplier_range=(0.95, 1.1), per_channel=True))
             tr_transforms.append(
@@ -270,19 +278,42 @@ def get_simclr_pipeline_transform(mode='train', patch_size=(50,50,50), base_trai
                                  patch_center_dist_from_border=[i // 2 for i in patch_size],
                                  do_elastic_deform=elastic_deform, alpha=(0., 100.), sigma=(10., 13.),
                                  do_rotation=rotate,
-                                 angle_x=(-0.1, 0.1), angle_y=(0, 1e-8), angle_z=(0, 1e-8),
+                                 angle_x=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
+                                 angle_y=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
+                                 angle_z=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
                                  scale=(0.9, 1.2),
                                  border_mode_data="nearest", border_mode_seg="nearest"),
             )
 
             tr_transforms.append(GaussianNoiseTransform(noise_variance=(0., 0.05)))
+            tr_transforms.append(GaussianBlurTransform(blur_sigma=(0.5, 1.5), different_sigma_per_channel=True))
         else:
             raise NotImplementedError
     elif mode == "val":
-        tr_transforms.append(
-            SpatialTransform(patch_size=(patch_size), random_crop=rnd_crop,
-                             patch_center_dist_from_border=[i // 2 for i in patch_size]),)
+        # tr_transforms.append(
+        #     SpatialTransform(patch_size=(patch_size), random_crop=rnd_crop,
+        #                      patch_center_dist_from_border=[i // 2 for i in patch_size]),)
+        tr_transforms = tr_transforms
+
+    elif mode == "fit":
+        tr_transforms.append(SpatialTransform_2(patch_size=(patch_size), random_crop=rnd_crop,
+                             patch_center_dist_from_border=[i // 2 for i in patch_size],
+                             do_elastic_deform=elastic_deform, deformation_scale=(0, 0.25),
+                             do_rotation=rotate,
+                             angle_x=(-0.1, 0.1), angle_y=(0, 1e-8), angle_z=(0, 1e-8),
+                             scale=(0.9, 1.2),
+                             border_mode_data="nearest", border_mode_seg="nearest",
+                            p_el_per_sample=0.2, p_rot_per_sample=0.2, p_scale_per_sample=0.2)
+        )
+        tr_transforms.append(MirrorTransform(axes=(0, 1, 2)))
+        tr_transforms.append(BrightnessMultiplicativeTransform((0.7, 1.5), per_channel=True, p_per_sample=0.15))
+        # tr_transforms.append(GaussianNoiseTransform(noise_variance=(0, 0.05), p_per_sample=0.20)) #0.15
+        # tr_transforms.append(GaussianBlurTransform(blur_sigma=(0.2, 0.5), different_sigma_per_channel=True,
+        #                                            p_per_channel=0.5, p_per_sample=0.10)) #0.10
 
     # now we compose these transforms together
     tr_transforms = Compose(tr_transforms)
+    if double_headed:
+        #tr_transforms = SimCLRDataTransform(tr_transforms, tr_transforms)
+        tr_transforms = SimCLRDataTransform(tr_transforms)
     return tr_transforms

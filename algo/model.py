@@ -13,6 +13,7 @@ from models import base
 from algo.base_algo.simclr import SimCLR_base
 from algo.utils import get_seg_im_gt, process_batch
 from config.paths import trainer_defaults
+from pytorch_lightning.utilities import argparse_utils
 
 
 ############## Possibly Rewrite this function obtaining y $#####################
@@ -25,8 +26,26 @@ def get_label_latent(experiment, dataloader, get_slice=False, to_npy=False, num_
         for epoch in range(num_epoch):
             for i, batch in enumerate(dataloader):
                 x, y = process_batch(batch)
+                # try:
+                #     from batchviewer import view_batch
+                #     view_batch(batch['data'][0][0])
+                #     view_batch(batch['data'][5][0])
+                #     view_batch(batch['data'][10][0])
+                #     view_batch(batch['data'][15][0])
+                #     view_batch(batch['data'][20][0])
+                #     view_batch(batch['data'][25][0])
+                #     view_batch(batch['data'][35][0])
+                #     view_batch(batch['data'][45][0])
+                #     view_batch(batch['data'][55][0])
+                #     view_batch(batch['data'][11][0])
+                #     view_batch(batch['data'][37][0])
+                #     view_batch(batch['data'][58][0])
+                #     view_batch(batch['data'][63][0])
+                # except ImportError:
+                #     view_batch = None
                 if y is not None and len(y.shape)>1:
-                    y, _ = get_seg_im_gt(batch) 
+                    #y, _ = get_seg_im_gt(batch)
+                    y = batch['label']
                 x = x.to(experiment.device)
                 z = experiment.encode(x)
                 latent.append(z.detach()) 

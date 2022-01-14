@@ -132,6 +132,7 @@ def numpy2dataset(x:np.ndarray, y:np.ndarray, cond:np.ndarray=None, c=0, inlier=
     y[~mask] = 1
     if inlier is True:
         mask = y==0
+        mask = mask.flatten()
         x_in = x[mask]
         y_in = y[mask]
     else:
@@ -146,7 +147,7 @@ def numpy2dataset(x:np.ndarray, y:np.ndarray, cond:np.ndarray=None, c=0, inlier=
 
 class INN_latent(Abstract_OOD):
     name = 'INN'
-    def __init__(self, input_shape:int, path:str= None, debug=False, batch_size=512, *args, **kwargs):
+    def __init__(self, input_shape:int, path:str= None, debug=False, batch_size=6, *args, **kwargs):
         """Maximum Likelihood based INN usable in the Abstract_OOD framework. 
         Uses the Path to build a path similar to the structure of the backbone model
 

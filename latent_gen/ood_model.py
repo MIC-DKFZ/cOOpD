@@ -85,7 +85,8 @@ class GaussianMixtureOOD(Abstract_OOD):
         self.model = self.model.to(self.device)
 
     def _fit(self, X:np.ndarray, Y:np.ndarray, c=0):
-        X_tr = X[Y==c]
+        print(X.shape, Y.shape)
+        X_tr = X[Y.flatten()==c]
         X_tr = torch.Tensor(X_tr).to(self.device)
         self.model.fit(X_tr)
 

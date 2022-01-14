@@ -97,6 +97,9 @@ class DictOf(MutableMapping):
                     out_dict[key] = val.detach().cpu().numpy()
                 elif isinstance(val, (list, tuple)):
                     out_dict[key] = np.array(val)
+                elif isinstance(val, dict): #for the metadata case
+                    for k, v in val.items():
+                        out_dict[key + '_' + k] = np.array(v)
                 elif isinstance(val, np.ndarray):
                     continue
                 else:
