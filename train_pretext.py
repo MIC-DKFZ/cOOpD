@@ -1,3 +1,4 @@
+import logging
 import os
 
 import pytorch_lightning as pl
@@ -5,7 +6,7 @@ import pytorch_lightning as pl
 from algo.model import get_args, get_experiment
 from config.paths import glob_conf
 from datamodules.brain_module import BrainDataModule
-
+from pytorch_lightning.loggers import tensorboard
 ## To exchange Datasets - Exchange BrainDataModule for another PL Datamodule
 
 
@@ -52,7 +53,10 @@ def main(args):
     experiment = get_experiment(args)
 
     trainer.fit(model=experiment, train_dataloader=loader_dict['train'], val_dataloaders=loader_dict['val'])
-    return experiment.logger.log_dir
+    print(logger.log_dir)
+    #return experiment.logger.log_dir
+    return logger.log_dir
+
 
 
 if __name__ == "__main__":

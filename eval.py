@@ -27,7 +27,7 @@ import csv
 from sys import getsizeof
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/pretext/brain/simclr-VGG/default/version_83')
+parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/pretext/brain/simclr-VGG13/default/10310796')
 parser.add_argument('--name_exp', type=str, default='full')
 
 

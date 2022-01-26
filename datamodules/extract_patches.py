@@ -500,7 +500,7 @@ if __name__ == "__main__":
 
 ###
     pattern = '*.npz'
-    base_dir = '/home/silvia/Documents/CRADL/pre-processed/no_resample'
+    base_dir = '/home/silvia/Documents/CRADL/pre-processed'
     with open(os.path.join(base_dir, 'filenames_for_eval.txt'), "r") as fp:
         filenames = json.load(fp)
     directories_read = [base_dir + '/' + sub + pattern.replace('*', '') for sub in filenames]

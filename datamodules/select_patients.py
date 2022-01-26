@@ -10,7 +10,7 @@ def select_patients_fortasks(data_folder):
     #npy_files = subfiles(data_folder[0], suffix=".npz", join=True)
     #new
     list_filenames=[]
-    all_patches = [_ for _ in os.listdir(data_folder[0].replace('no_resample/','all_no_resample/patches_all_overlap0')) if _.endswith('.npz')]
+    all_patches = [_ for _ in os.listdir(data_folder[0].replace('no_resample/','patches_all_overlap0')) if _.endswith('.npz')]
     all_patches_unique = [i.split('_', 1)[0] for i in all_patches]
     npy_files = list(set(all_patches_unique))
 
@@ -18,7 +18,7 @@ def select_patients_fortasks(data_folder):
     patients = [str(os.path.basename(i)).split('.')[0] for i in npy_files]
 
     annotation = pd.read_csv(
-        os.path.join(data_folder[0].replace('/pre-processed/no_resample', ''), 'COPD_criteria_complete.csv'),
+        os.path.join(data_folder[0], 'COPD_criteria_complete.csv'),
         sep=',', converters={'patient': lambda x: str(x)})
 
     annotation = annotation[annotation.notna()]

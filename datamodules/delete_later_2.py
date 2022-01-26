@@ -79,7 +79,7 @@ if __name__ == "__main__":
 
 
 
-    dir_data = '/home/silvia/Documents/CRADL/pre-processed/no_resample'
+    dir_data = '/home/silvia/Documents/CRADL/pre-processed'
 
     list_dir = os.listdir(dir_data)
 

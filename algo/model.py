@@ -172,8 +172,14 @@ def get_experiment(args, num_layers:int = 5): #2
             else:
                 raise NotImplementedError
             model = base.ResNet_Encoder(base_model=args.model_type, channels_in=args.input_shape[0], cifar_stem=cifar_stem)
-        elif args.model_type[:6] == 'VGG':
+        elif args.model_type[:6] == 'VGG11':
             model = base.VGG(in_channels= args.input_shape[0], vgg_name='VGG11')
+        elif args.model_type[:6] == 'VGG13':
+            model = base.VGG(in_channels= args.input_shape[0], vgg_name='VGG13')
+        elif args.model_type[:6] == 'VGG16':
+            model = base.VGG(in_channels= args.input_shape[0], vgg_name='VGG16')
+        elif args.model_type[:6] == 'VGG19':
+            model = base.VGG(in_channels= args.input_shape[0], vgg_name='VGG19')
         # Here can new model types be implemented!
         else:
             raise NotImplementedError
@@ -200,6 +206,7 @@ def get_best_checkpoint(path):
 def get_hparams(path):
     with open(os.path.join(path, 'hparams.yaml'), 'r') as file:
         hparams = yaml.load(file, Loader=yaml.FullLoader)
+    hparams['model_type'] = path.split('/')[-3].split('-')[1]
     hparams = Namespace(**hparams)
     return hparams
 

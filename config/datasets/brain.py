@@ -15,11 +15,11 @@ datasets_common_args = {
         'num_threads_in_multithreaded': 1,
         'double_headed': False,
         #'step': 'pretext'
-        #'base_train' : 'default'
+        'base_train' : 'default'
     }
 
 datasets_train_args = {
-        'base_dir': [data_dir + '/all_no_resample'], #insp_jacobian
+        'base_dir': [data_dir], #insp_jacobian
         #'slice_offset': 20,
         'num_processes': 12,
         #'step': 'pretext' #I think this should be here instead of in common_args. Review in new training
@@ -27,7 +27,7 @@ datasets_train_args = {
     }
 
 datasets_val_args = {
-        'base_dir': [data_dir + '/all_no_resample'], #insp_jacobian
+        'base_dir': [data_dir], #insp_jacobian
         'n_items': 6400,
         'do_reshuffle': False,
         'mode': 'val',
@@ -37,7 +37,7 @@ datasets_val_args = {
     }
 
 datasets_val_ano_args = {
-        "base_dir": [data_dir + '/all_no_resample'],
+        "base_dir": [data_dir],
         "n_items": 6400,
         "do_reshuffle": False,
         "mode": "val",
@@ -48,7 +48,7 @@ datasets_val_ano_args = {
     }
 
 datasets_test_args = {
-        "base_dir": [data_dir + '/all_no_resample'],
+        "base_dir": [data_dir],
         "n_items": 6400,
         "do_reshuffle": False,
         "mode": "val",
@@ -59,7 +59,7 @@ datasets_test_args = {
     }
 
 eval_val_ano_args = {
-        'base_dir':[data_dir + '/all_no_resample'],
+        'base_dir':[data_dir],
         'n_items': None,
         'do_reshuffle': False,
         'mode': 'val',
@@ -70,7 +70,7 @@ eval_val_ano_args = {
     }
 
 eval_test_args = {
-        'base_dir':[data_dir + '/all_no_resample'],
+        'base_dir':[data_dir],
         'n_items': None,
         'do_reshuffle': False,
         'mode': 'val',
@@ -153,7 +153,7 @@ eval_loader_args = {
     #     'tmp_dir': tmp_data_dir,
     # },
     'lung_val': {
-        'base_dir': [data_dir + '/all_no_resample'],
+        'base_dir': [data_dir],
         'n_items': None,
         'do_reshuffle': False,
         'mode': 'val',

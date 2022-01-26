@@ -268,7 +268,7 @@ def get_brain_dataset(base_dir,  mode="train", batch_size=64, n_items=None, pin_
 
     transforms = get_simclr_pipeline_transform(mode, patch_size, rnd_crop=rnd_crop,
                                                   elastic_deform=elastic_deform,
-                                                  rotate=rotate, base_train='default', double_headed= double_headed)
+                                                  rotate=rotate, base_train=base_train, double_headed= double_headed)
 
     # transforms_val = get_simclr_pipeline_transform(mode, patch_size, rnd_crop=rnd_crop,
     #                                               elastic_deform=elastic_deform,
@@ -613,7 +613,7 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
 
 
         #I have to put this somewhere else. where??
-        annotation = pd.read_csv(os.path.join(self.base_dir[0].replace('/pre-processed/all_no_resample',''), 'COPD_criteria_complete.csv'),
+        annotation = pd.read_csv(os.path.join(self.base_dir[0], 'COPD_criteria_complete.csv'),
                                  sep=',', converters={'patient': lambda x: str(x)}) #insp_jacobian
 
         #drop missing values
@@ -825,7 +825,7 @@ class BrainDataLoader_eval(AbstractAnomalyDataLoader):
 
 
         #I have to put this somewhere else. where??
-        annotation = pd.read_csv(os.path.join(self.base_dir[0].replace('/pre-processed/no_resample',''), 'COPD_criteria_complete.csv'),
+        annotation = pd.read_csv(os.path.join(self.base_dir[0], 'COPD_criteria_complete.csv'),
                                  sep=',', converters={'patient': lambda x: str(x)}) #insp_jacobian
 
         #drop missing values

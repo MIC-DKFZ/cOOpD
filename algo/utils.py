@@ -51,8 +51,8 @@ def process_batch(batch):
                 x_.append(data.to(torch.float))
         x = tuple(x_)
         del x_
-    print(x)
-    print(y)
+    #print(x)
+    #print(y)
     return x, y
 
 # TODO: Find a way to make this easily generalizable! (multi channel etc.)

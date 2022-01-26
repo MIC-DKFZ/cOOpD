@@ -10,7 +10,7 @@ from algo.model import load_best_model, get_label_latent
 from config.latent_model import filename, model_dicts, tmp, suffix, rel_save
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/pretext/brain/simclr-CNN3D/default/version_562')
+parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/pretext/brain/simclr-VGG13/default/10310796')
 parser.add_argument('--num_epoch', type=int, default=1)
 parser.add_argument('--resave', type=str2bool, nargs='?', const=True, default=False)
 

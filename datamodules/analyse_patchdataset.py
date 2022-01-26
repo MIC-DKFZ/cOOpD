@@ -20,7 +20,7 @@ def metadata_to_DataFrame(folder):
 
 
     annotation = pd.read_csv(
-        os.path.join(data_folder[0].replace('/pre-processed/no_resample', ''), 'COPD_criteria_complete.csv'),
+        os.path.join(data_folder[0], 'COPD_criteria_complete.csv'),
         sep=',', converters={'patient': lambda x: str(x)})
 
     annotation = annotation[annotation.notna()]
@@ -48,12 +48,12 @@ def metadata_to_DataFrame(folder):
     print(df_metadata)
     df_metadata['emph_0.01'] = df_metadata['emphysema_perc'].apply(lambda x: 0 if x < 0.01 else 1)
     df_metadata['patch_name'] = df_metadata["patient"].astype(str) + '_' + df_metadata["patch_num"].astype(str)
-    df_metadata.to_csv(os.path.join(data_folder[0].replace('/pre-processed/no_resample', ''), 'all_info_patches_COPD.csv'))
+    df_metadata.to_csv(os.path.join(data_folder[0].replace('/pre-processed', ''), 'all_info_patches_COPD.csv'))
 
 
 if __name__ == "__main__":
-    folder = '/home/silvia/Documents/CRADL/pre-processed/all_no_resample/patches_new_all_overlap0'
-    data_folder = ['/home/silvia/Documents/CRADL/pre-processed/no_resample']
+    folder = '/home/silvia/Documents/CRADL/pre-processed/patches_new_all_overlap0'
+    data_folder = ['/home/silvia/Documents/CRADL/pre-processed']
 
     metadata_to_DataFrame(folder)
 

@@ -36,7 +36,7 @@ class SimCLR_base(pl.LightningModule):
 
     def shared_step(self, batch, sum_samples=True, mode='train', vis=False, ano=False):
         #print(batch)
-        print('reached_batch_form', batch['patient_name'], batch['label'], batch['patch_num'])
+        #print('reached_batch_form', batch['patient_name'], batch['label'], batch['patch_num'])
         # print('batch_size')
         # print(len(batch['data'][0]))
         # print(len(batch['data'][1]))
@@ -49,8 +49,8 @@ class SimCLR_base(pl.LightningModule):
             #print(batch['data'])
             #print(batch['data'][0])
 
-            # view_batch(batch['data'][0][0])
-            # view_batch(batch['data'][0][1])
+            view_batch(batch['data'][0][0])
+            view_batch(batch['data'][0][1])
 
 
 
@@ -65,17 +65,19 @@ class SimCLR_base(pl.LightningModule):
             # first pair
             print(x_a.shape)
 
-            # view_batch(x_a[0, 0,:,:,:])
-            # view_batch(x_b[0, 0,:,:,:])
+            view_batch(batch['data'][0][0])
+            view_batch(batch['data'][0][1])
+            view_batch(x_a[0, 0,:,:,:])
+            view_batch(x_b[0, 0,:,:,:])
 
-            # view_batch(x_a[1, 0, :, :,:])
-            # view_batch(x_b[1, 0, :, :,:])
-            #
-            # view_batch(x_a[2, 0, :, :,:])
-            # view_batch(x_b[2, 0, :, :,:])
-            #
-            # view_batch(x_a[7, 0, :, :,:])
-            # view_batch(x_b[7, 0, :, :,:])
+            view_batch(x_a[10, 0, :, :,:])
+            view_batch(x_b[10, 0, :, :,:])
+
+            view_batch(x_a[2, 0, :, :,:])
+            view_batch(x_b[2, 0, :, :,:])
+
+            view_batch(x_a[7, 0, :, :,:])
+            view_batch(x_b[7, 0, :, :,:])
 
 
 
@@ -206,7 +208,7 @@ class SimCLR_base(pl.LightningModule):
         parser.add_argument("--temperature", default=0.5, type=float)
         parser.add_argument("--weight_decay", default=1e-6, type=float)
         parser.add_argument("--warmup_epochs", default=5, type=int)
-        parser.add_argument("--model_type", default= 'VGG', type=str) #CNN3D #resnet18 #VGG
+        parser.add_argument("--model_type", choices=['VGG11', 'VGG13', 'VGG16', 'VGG19', 'resnet18', 'resnet50','CNN3D'], default= 'VGG11', type=str) #CNN3D #resnet18 #VGG11 #VGG13 #VGG16 #VGG19
         parser.add_argument("--mlp_norm", default=False, type=str2bool, const=True, nargs='?')
         parser.add_argument("--augmentation", choices=['standard', 'standard-rot','standard-blur', 'ce', 'ce-blur', 'ce-no_crop', 'random_crop', 'random_crop-ce'],default='random_crop', type=str)
 
