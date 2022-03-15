@@ -200,8 +200,28 @@ def select_patients_fortasks_emphysema(data_folder):
     #healthy_pretext_list = [p for i in healthy_pretext_GMM for p in healthy['patch_name'].to_list() if i == p.split('_')[0]]
     healthy_pretext_list = [p for i in healthy_pretext_GMM for p in healthy['patch_name'].to_list() if p.startswith(i)]
 
-    #healthy_GMM_list = [p for i in healthy_pretext_GMM for p in healthy['patch_name'].to_list() if i == p.split('_')[0] and annotation.loc[annotation['patch_name'] == p, 'emph_0.01'].iloc[0] == 0]
     healthy_GMM_list = [p for i in healthy_pretext_GMM for p in healthy['patch_name'].to_list() if p.startswith(i) and annotation.loc[annotation['patch_name'] == p, 'emph_0.01'].iloc[0] == 0]
+
+    #what am I removing
+    removed = [p for i in healthy_pretext_GMM for p in healthy['patch_name'].to_list() if p.startswith(i) and annotation.loc[annotation['patch_name'] == p, 'emph_0.01'].iloc[0] == 1]
+    print(removed)
+    df_remove = healthy[healthy['patch_name'].isin(removed)]
+    df_global = healthy[healthy['patch_name'].isin(healthy_GMM_list)]
+    print(df_remove)
+    from collections import Counter
+    print(Counter(df_global['location']))
+    print(Counter(df_remove['location']))
+    dict_loc_healthy = dict(Counter(df_global['location']))
+    dict_loc_healthy_perc = dict(Counter(df_remove['location']))
+    divide = {k: dict_loc_healthy_perc[k] / (dict_loc_healthy[k] + dict_loc_healthy_perc[k]) for k in dict_loc_healthy.keys() & dict_loc_healthy_perc}
+    print(divide)
+
+    dict_name_healthy = dict(Counter(df_global['patient']))
+    dict_name_healthy_perc = dict(Counter(df_remove['patient']))
+    divide = {k: dict_name_healthy_perc[k] / (dict_name_healthy[k] + dict_name_healthy_perc[k]) for k in dict_name_healthy.keys() & dict_name_healthy_perc}
+    print(divide)
+
+
 
     #healthy_eval_list = [p for i in healthy_eval for p in healthy['patch_name'].to_list() if i == p.split('_')[0]]
     healthy_eval_list = [p for i in healthy_eval for p in healthy['patch_name'].to_list() if p.startswith(i)]

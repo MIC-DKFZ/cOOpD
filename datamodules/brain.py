@@ -245,8 +245,12 @@ def get_brain_dataset(base_dir,  mode="train", batch_size=64, n_items=None, pin_
                       num_threads_in_multithreaded = 1, base_train = 'default',  double_headed=False, target_size = (1,50,50,50)
                       ):
 
-    patients = get_list_of_patients(data_folder= base_dir, step=step)
-    train, val = get_split_deterministic(patients, fold=0, num_splits=5, random_state=12345)
+    patches = get_list_of_patients(data_folder= base_dir, step=step)
+    patients = np.unique([i.split('_')[0] for i in patches])
+    train_pat, val_pat = get_split_deterministic(patients, fold=0, num_splits=5, random_state=12345)
+    train = [i for i in patches if i.split('_')[0] in train_pat]
+    val = [i for i in patches if i.split('_')[0] in val_pat]
+
     # dataloader_train = DataLoader3D(train, batch_size, patch_size, num_threads_in_multithreaded)
     # dataloader_validation = DataLoader3D(val, batch_size, patch_size, num_threads_in_multithreaded)
     # tr_transforms = get_simclr_pipeline_transform(mode, patch_size, rnd_crop = rnd_crop, elastic_deform = elastic_deform,
@@ -263,7 +267,7 @@ def get_brain_dataset(base_dir,  mode="train", batch_size=64, n_items=None, pin_
 
     if step=='pretext':
         double_headed = True
-    if step=='fitting_GMM':
+    if step=='fitting_GMM' or step=='attention_mech':
         mode='fit' #val
 
     transforms = get_simclr_pipeline_transform(mode, patch_size, rnd_crop=rnd_crop,
@@ -435,6 +439,9 @@ def get_list_of_patients(data_folder, step):
             list_filenames = json.load(fp)
     elif step == 'test':
         with open(os.path.join(data_folder[0], 'patches_for_testset.txt'), "r") as fp:
+            list_filenames = json.load(fp)
+    elif step == 'attention_mech':
+        with open(os.path.join(data_folder[0], 'patches_for_pretext.txt'), "r") as fp:
             list_filenames = json.load(fp)
     else:
         raise NotImplementedError

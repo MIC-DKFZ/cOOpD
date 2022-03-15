@@ -111,7 +111,7 @@ class BrainDataModule(pl.LightningDataModule):
         parser.add_argument("--num_workers", default=12, type=int)
         parser.add_argument("--dataset", default='brain', type=str) # choices=['brain'],type=str)
         parser.add_argument("--target_size", default=(50,50,50), type=int)
-        parser.add_argument("--base_train", default='models_genesis', type=str)
+        parser.add_argument("--base_train", default='models_genesis', type=str, choices=['default', 'models_genesis'])
         parser.add_argument("--step", default='pretext', type=str, choices=['pretext', 'fitting_GMM', 'eval', 'test'])
         return parser
         

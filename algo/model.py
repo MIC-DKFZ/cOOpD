@@ -73,6 +73,89 @@ def get_label_latent(experiment, dataloader, get_slice=False, to_npy=False, num_
 
 
 
+
+
+
+
+def get_label_latent_forCNN(experiment, dataloader, get_slice=False, to_npy=False, num_epoch=1):
+    experiment.freeze()
+    latent = []
+    labels = []
+    location = []
+    coordinates = []
+    patch_number = []
+    patient = []
+    slices = []
+    with torch.no_grad():
+        for epoch in range(num_epoch):
+            for i, batch in enumerate(dataloader):
+                x, y = process_batch(batch)
+                # try:
+                #     from batchviewer import view_batch
+                #     view_batch(batch['data'][0][0])
+                #     view_batch(batch['data'][5][0])
+                #     view_batch(batch['data'][10][0])
+                #     view_batch(batch['data'][15][0])
+                #     view_batch(batch['data'][20][0])
+                #     view_batch(batch['data'][25][0])
+                #     view_batch(batch['data'][35][0])
+                #     view_batch(batch['data'][45][0])
+                #     view_batch(batch['data'][55][0])
+                #     view_batch(batch['data'][11][0])
+                #     view_batch(batch['data'][37][0])
+                #     view_batch(batch['data'][58][0])
+                #     view_batch(batch['data'][63][0])
+                # except ImportError:
+                #     view_batch = None
+                if y is not None and len(y.shape) > 1:
+                    # y, _ = get_seg_im_gt(batch)
+                    y = batch['label']
+                    loc = torch.as_tensor(list(map(int, batch['metadata']['location'])))
+                    coord = torch.as_tensor(batch['metadata']['coordinates'])
+                    patch_num = torch.as_tensor(batch['metadata']['patch_num'])
+                    pat_ID = torch.as_tensor(list(map(int, [x[:-1] for x in batch['patient_name']])))
+                x = x.to(experiment.device)
+                z = experiment.encode(x)
+                latent.append(z.detach())
+                latent = [torch.cat(latent, dim=0)]
+                labels.append(y.detach())
+                labels = [torch.cat(labels, dim=0)]
+                location.append(loc)
+                location = [torch.cat(location, dim = 0)]
+                coordinates.append(coord)
+                coordinates = [torch.cat(coordinates, dim = 0)]
+                patch_number.append(patch_num.detach())
+                patch_number = [torch.cat(patch_number, dim = 0)]
+                patient.append(pat_ID)
+                patient = [torch.cat(patient, dim = 0)]
+                if get_slice:
+                    slices.append(batch['slice_idxs'].detach())
+                    slices = [torch.cat(slices, dim=0)]
+
+    labels = labels[0].to('cpu')
+    latent = latent[0].to('cpu')
+    location = location[0].to('cpu')
+    coordinates = coordinates[0].to('cpu')
+    patch_number = patch_number[0].to('cpu')
+    patient = patient[0].to('cpu')
+    if to_npy:
+        labels = labels.numpy()
+        latent = latent.numpy()
+        location = location.numpy()
+        coordinates = coordinates.numpy()
+        patch_number = patch_number.numpy()
+        patient = patient.numpy()
+
+    out_dict = {'labels': labels, 'latent': latent, 'location': location, 'coordinates': coordinates, 'patch_number': patch_number, 'patient': patient}
+    if get_slice:
+        slices = slices[0].to('cpu')
+        if to_npy:
+            slices = slices.numpy()
+        out_dict['slice_idxs'] = slices
+
+    return out_dict
+
+
 def get_args(DataModule:pl.LightningDataModule, default_experiment='simclr' ,arguments=None):
     """Helper to obtain the arguments for the features training
 
@@ -206,7 +289,7 @@ def get_best_checkpoint(path):
 def get_hparams(path):
     with open(os.path.join(path, 'hparams.yaml'), 'r') as file:
         hparams = yaml.load(file, Loader=yaml.FullLoader)
-    hparams['model_type'] = path.split('/')[-3].split('-')[1]
+    #hparams['model_type'] = path.split('/')[-3].split('-')[1]
     hparams = Namespace(**hparams)
     return hparams
 

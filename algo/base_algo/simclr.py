@@ -49,35 +49,53 @@ class SimCLR_base(pl.LightningModule):
             #print(batch['data'])
             #print(batch['data'][0])
 
-            view_batch(batch['data'][0][0])
-            view_batch(batch['data'][0][1])
+            # view_batch(batch['data'][0][0])
+            # view_batch(batch['data'][0][1])
 
 
 
         except ImportError:
             view_batch = None
-
+        import SimpleITK as sitk
         (x_a, x_b), y = process_batch(batch)
+
+
+        # print(batch['patient_name'])
+        # print(batch['patch_num'])
+        # import numpy as np
+        # for i in [0, 2, 7]:
+        #     numpy_array = np.load('/home/silvia/Documents/CRADL/pre-processed/patches_new_all_overlap0/' + batch['patient_name'][i] + '_' + batch['patch_num'][i] + '.npz',
+        #                           mmap_mode="r")
+        #     insp = numpy_array['insp']
+        #     sitk.WriteImage(sitk.GetImageFromArray(insp), '/home/silvia/Downloads/try_' + str(i) + '.nii.gz')
 
         try:
             from batchviewer import view_batch
             # same patient, two augm
             # first pair
-            print(x_a.shape)
+            # print(x_a.shape)
 
-            view_batch(batch['data'][0][0])
-            view_batch(batch['data'][0][1])
-            view_batch(x_a[0, 0,:,:,:])
-            view_batch(x_b[0, 0,:,:,:])
-
-            view_batch(x_a[10, 0, :, :,:])
-            view_batch(x_b[10, 0, :, :,:])
-
-            view_batch(x_a[2, 0, :, :,:])
-            view_batch(x_b[2, 0, :, :,:])
-
-            view_batch(x_a[7, 0, :, :,:])
-            view_batch(x_b[7, 0, :, :,:])
+            # view_batch(batch['data'][0][0])
+            # view_batch(batch['data'][0][1])
+            # view_batch(x_a[0, 0,:,:,:])
+            # view_batch(x_b[0, 0,:,:,:])
+            # sitk.WriteImage(sitk.GetImageFromArray(x_a[0, 0,:,:,:].cpu()), '/home/silvia/Downloads/try_0aHU.nii.gz')
+            # sitk.WriteImage(sitk.GetImageFromArray(x_b[0, 0,:,:,:].cpu()), '/home/silvia/Downloads/try_0bHU.nii.gz')
+            #
+            #
+            # view_batch(x_a[10, 0, :, :,:])
+            # view_batch(x_b[10, 0, :, :,:])
+            #
+            #
+            # view_batch(x_a[2, 0, :, :,:])
+            # view_batch(x_b[2, 0, :, :,:])
+            # sitk.WriteImage(sitk.GetImageFromArray(x_a[2, 0,:,:,:].cpu()), '/home/silvia/Downloads/try_2aHU.nii.gz')
+            # sitk.WriteImage(sitk.GetImageFromArray(x_b[2, 0,:,:,:].cpu()), '/home/silvia/Downloads/try_2bHU.nii.gz')
+            #
+            # view_batch(x_a[7, 0, :, :,:])
+            # view_batch(x_b[7, 0, :, :,:])
+            # sitk.WriteImage(sitk.GetImageFromArray(x_a[7, 0,:,:,:].cpu()), '/home/silvia/Downloads/try_7aHU.nii.gz')
+            # sitk.WriteImage(sitk.GetImageFromArray(x_b[7, 0,:,:,:].cpu()), '/home/silvia/Downloads/try_7bHU.nii.gz')
 
 
 

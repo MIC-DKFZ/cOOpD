@@ -9,7 +9,7 @@ from batchgenerators.transforms.abstract_transforms import Compose, RndTransform
 from batchgenerators.transforms.color_transforms import ClipValueRange
 from batchgenerators.transforms.crop_and_pad_transforms import CenterCropTransform, PadTransform #, FillupPadTransform
 from batchgenerators.transforms.noise_transforms import BlankSquareNoiseTransform, GaussianBlurTransform 
-from batchgenerators.transforms.spatial_transforms import ResizeTransform, ZoomTransform
+from batchgenerators.transforms.spatial_transforms import ResizeTransform, ZoomTransform, Rot90Transform, MirrorTransform
 from batchgenerators.transforms.utility_transforms import AddToDictTransform, CopyTransform, NumpyToTensor, \
     ReshapeTransform
 from batchgenerators.transforms.abstract_transforms import AbstractTransform
@@ -308,13 +308,11 @@ def bezier_curve(points, nTimes=1000):
 def NormalizeData(data):
     return (data - np.min(data)) / (np.max(data) - np.min(data))
 
-def nonlinear_transformation(x, prob=0.5):
+def nonlinear_transformation(x):
     # x = np.clip(x, -1000, 1000)
     # x = NormalizeData(x)
 
-    if random.random() >= prob:
-        return x
-    points = [[np.min(x), np.min(x)], [random.uniform(np.min(x), np.max(x)), random.uniform(np.min(x), np.max(x))], [random.uniform(np.min(x), np.max(x)), random.uniform(np.min(x), np.max(x))], [np.max(x), np.max(x)]]
+    points = [[np.min(x), np.min(x)], [np.random.uniform(np.min(x), np.max(x)), np.random.uniform(np.min(x), np.max(x))], [np.random.uniform(np.min(x), np.max(x)), np.random.uniform(np.min(x), np.max(x))], [np.max(x), np.max(x)]]
     #points = [[0,0], [random.random(), random.random()], [random.random(), random.random()], [1,1]]
     xpoints = [p[0] for p in points]
     ypoints = [p[1] for p in points]
@@ -330,11 +328,12 @@ def nonlinear_transformation(x, prob=0.5):
 
 
 def local_pixel_shuffling(x, prob=0.5):
+
     if random.random() >= prob:
         return x
     image_temp = copy.deepcopy(x)
     orig_image = copy.deepcopy(x)
-    _, img_rows, img_cols, img_deps = x.shape
+    _, _, img_rows, img_cols, img_deps = x.shape
     num_block = 10000
     for _ in range(num_block):
         block_noise_size_x = random.randint(1, img_rows//10)
@@ -343,7 +342,7 @@ def local_pixel_shuffling(x, prob=0.5):
         noise_x = random.randint(0, img_rows-block_noise_size_x)
         noise_y = random.randint(0, img_cols-block_noise_size_y)
         noise_z = random.randint(0, img_deps-block_noise_size_z)
-        window = orig_image[0, noise_x:noise_x+block_noise_size_x,
+        window = orig_image[0, 0, noise_x:noise_x+block_noise_size_x,
                                noise_y:noise_y+block_noise_size_y,
                                noise_z:noise_z+block_noise_size_z,
                            ]
@@ -352,7 +351,7 @@ def local_pixel_shuffling(x, prob=0.5):
         window = window.reshape((block_noise_size_x,
                                  block_noise_size_y,
                                  block_noise_size_z))
-        image_temp[0, noise_x:noise_x+block_noise_size_x,
+        image_temp[0, 0, noise_x:noise_x+block_noise_size_x,
                       noise_y:noise_y+block_noise_size_y,
                       noise_z:noise_z+block_noise_size_z] = window
     local_shuffling_x = image_temp
@@ -360,7 +359,7 @@ def local_pixel_shuffling(x, prob=0.5):
     return local_shuffling_x
 
 def image_in_painting(x):
-    _, img_rows, img_cols, img_deps = x.shape
+    _, _, img_rows, img_cols, img_deps = x.shape
     cnt = 5
     while cnt > 0 and random.random() < 0.95:
         block_noise_size_x = random.randint(img_rows//6, img_rows//3)
@@ -369,29 +368,29 @@ def image_in_painting(x):
         noise_x = random.randint(3, img_rows-block_noise_size_x-3)
         noise_y = random.randint(3, img_cols-block_noise_size_y-3)
         noise_z = random.randint(3, img_deps-block_noise_size_z-3)
-        x[:,
+        x[:,:,
           noise_x:noise_x+block_noise_size_x,
           noise_y:noise_y+block_noise_size_y,
-          noise_z:noise_z+block_noise_size_z] = np.random.rand(block_noise_size_x,
+          noise_z:noise_z+block_noise_size_z] = np.random.rand(_, block_noise_size_x,
                                                                block_noise_size_y,
                                                                block_noise_size_z, ) * 1.0
         cnt -= 1
     return x
 
 def image_out_painting(x):
-    _, img_rows, img_cols, img_deps = x.shape
+    _, _, img_rows, img_cols, img_deps = x.shape
     image_temp = copy.deepcopy(x)
-    x = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3], ) * 1.0
+    x = np.random.rand(x.shape[0], x.shape[1], x.shape[2], x.shape[3], x.shape[4], ) * 1.0
     block_noise_size_x = img_rows - random.randint(3*img_rows//7, 4*img_rows//7)
     block_noise_size_y = img_cols - random.randint(3*img_cols//7, 4*img_cols//7)
     block_noise_size_z = img_deps - random.randint(3*img_deps//7, 4*img_deps//7)
     noise_x = random.randint(3, img_rows-block_noise_size_x-3)
     noise_y = random.randint(3, img_cols-block_noise_size_y-3)
     noise_z = random.randint(3, img_deps-block_noise_size_z-3)
-    x[:,
+    x[:,:,
       noise_x:noise_x+block_noise_size_x,
       noise_y:noise_y+block_noise_size_y,
-      noise_z:noise_z+block_noise_size_z] = image_temp[:, noise_x:noise_x+block_noise_size_x,
+      noise_z:noise_z+block_noise_size_z] = image_temp[:,:, noise_x:noise_x+block_noise_size_x,
                                                        noise_y:noise_y+block_noise_size_y,
                                                        noise_z:noise_z+block_noise_size_z]
     cnt = 4
@@ -402,10 +401,10 @@ def image_out_painting(x):
         noise_x = random.randint(3, img_rows-block_noise_size_x-3)
         noise_y = random.randint(3, img_cols-block_noise_size_y-3)
         noise_z = random.randint(3, img_deps-block_noise_size_z-3)
-        x[:,
+        x[:, :,
           noise_x:noise_x+block_noise_size_x,
           noise_y:noise_y+block_noise_size_y,
-          noise_z:noise_z+block_noise_size_z] = image_temp[:, noise_x:noise_x+block_noise_size_x,
+          noise_z:noise_z+block_noise_size_z] = image_temp[:,:, noise_x:noise_x+block_noise_size_x,
                                                            noise_y:noise_y+block_noise_size_y,
                                                            noise_z:noise_z+block_noise_size_z]
         cnt -= 1
@@ -419,9 +418,13 @@ class NonLinearTransform(AbstractTransform):
         self.data_key = data_key
 
     def __call__(self, **data_dict):
-        for b in range(len(data_dict[self.data_key])):
-            if np.random.uniform() < self.p_per_sample:
-                data_dict[self.data_key][b] = nonlinear_transformation(data_dict[self.data_key][b], self.p_per_sample)
+        # for b in range(len(data_dict[self.data_key])):
+        #     if np.random.uniform() < self.p_per_sample:
+        #         data_dict[self.data_key][b] = nonlinear_transformation(data_dict[self.data_key][b])
+        # return data_dict
+
+        if np.random.uniform() < self.p_per_sample:
+            data_dict[self.data_key] = nonlinear_transformation(data_dict[self.data_key])
         return data_dict
 
 class LocalPixelShuffling(AbstractTransform):
@@ -432,9 +435,12 @@ class LocalPixelShuffling(AbstractTransform):
         self.data_key = data_key
 
     def __call__(self, **data_dict):
-        for b in range(len(data_dict[self.data_key])):
-            if np.random.uniform() < self.p_per_sample:
-                data_dict[self.data_key][b] = local_pixel_shuffling(data_dict[self.data_key][b], self.p_per_sample)
+        # for b in range(len(data_dict[self.data_key])):
+        #     if np.random.uniform() < self.p_per_sample:
+        #         data_dict[self.data_key][b] = local_pixel_shuffling(data_dict[self.data_key][b], self.p_per_sample)
+        # return data_dict
+        if np.random.uniform() < self.p_per_sample:
+            data_dict[self.data_key] = local_pixel_shuffling(data_dict[self.data_key], self.p_per_sample)
         return data_dict
 
 
@@ -447,14 +453,22 @@ class InOutPainting(AbstractTransform):
         self.data_key = data_key
 
     def __call__(self, **data_dict):
-        for b in range(len(data_dict[self.data_key])):
-            if random.random() < self.p_per_sample:
-                if np.random.uniform() < self.p_inpaint_rate:
-                    #Inpainting
-                    data_dict[self.data_key][b] = image_in_painting(data_dict[self.data_key][b])
-                else:
-                    #Outpainting
-                    data_dict[self.data_key][b] = image_out_painting(data_dict[self.data_key][b])
+        # for b in range(len(data_dict[self.data_key])):
+        #     if random.random() < self.p_per_sample:
+        #         if np.random.uniform() < self.p_inpaint_rate:
+        #             #Inpainting
+        #             data_dict[self.data_key][b] = image_in_painting(data_dict[self.data_key][b])
+        #         else:
+        #             #Outpainting
+        #             data_dict[self.data_key][b] = image_out_painting(data_dict[self.data_key][b])
+        # return data_dict
+        if random.random() < self.p_per_sample:
+            if np.random.uniform() < self.p_inpaint_rate:
+                #Inpainting
+                data_dict[self.data_key] = image_in_painting(data_dict[self.data_key])
+            else:
+                #Outpainting
+                data_dict[self.data_key] = image_out_painting(data_dict[self.data_key])
         return data_dict
 
 
@@ -486,31 +500,23 @@ def get_simclr_pipeline_transform(mode='train', patch_size=(1,30,30,30), base_tr
             tr_transforms.append(GaussianBlurTransform(blur_sigma=(0.5, 1.5), different_sigma_per_channel=True))
         elif base_train == 'models_genesis':
             # global transformations
-            # tr_transforms.append(
-            #     SpatialTransform(patch_size=(patch_size), random_crop=rnd_crop,
-            #                      patch_center_dist_from_border=[i // 2 for i in patch_size],
-            #                      do_elastic_deform=elastic_deform, alpha=(0., 100.), sigma=(10., 13.),
-            #                      do_rotation=rotate,
-            #                      angle_x=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
-            #                      angle_y=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
-            #                      angle_z=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
-            #                      scale=(0.9, 1.2),
-            #                      border_mode_data="nearest", border_mode_seg="nearest"),
-            # )
+
             tr_transforms.append(NonLinearTransform(p_per_sample=0.5))
             tr_transforms.append(LocalPixelShuffling(p_per_sample=0.5))
             tr_transforms.append(InOutPainting(p_per_sample=0.5, p_inpaint_rate=0.5))
-            tr_transforms.append(
-                SpatialTransform_2(
-                    patch_size, [i // 2 for i in patch_size],
-                    do_rotation=True,
-                    angle_x=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
-                    angle_y=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
-                    angle_z=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
-                    random_crop=True,
-                    p_rot_per_sample=0.3
-                )
-            )
+            tr_transforms.append(MirrorTransform(axes=(2,)))
+            tr_transforms.append(Rot90Transform(p_per_sample= 0.3))
+            # tr_transforms.append(
+            #     SpatialTransform_2(
+            #         patch_size, [i // 2 for i in patch_size],
+            #         do_rotation=True,
+            #         angle_x=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
+            #         angle_y=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
+            #         angle_z=(- 15 / 360. * 2 * np.pi, 15 / 360. * 2 * np.pi),
+            #         random_crop=True,
+            #         p_rot_per_sample=0.3
+            #     )
+            # )
         else:
             raise NotImplementedError
     elif mode == "val":
@@ -520,17 +526,18 @@ def get_simclr_pipeline_transform(mode='train', patch_size=(1,30,30,30), base_tr
         tr_transforms = tr_transforms
 
     elif mode == "fit":
-        tr_transforms.append(SpatialTransform_2(patch_size=(patch_size), random_crop=rnd_crop,
-                             patch_center_dist_from_border=[i // 2 for i in patch_size],
-                             do_elastic_deform=elastic_deform, deformation_scale=(0, 0.25),
-                             do_rotation=rotate,
-                             angle_x=(-0.1, 0.1), angle_y=(0, 1e-8), angle_z=(0, 1e-8),
-                             scale=(0.9, 1.2),
-                             border_mode_data="nearest", border_mode_seg="nearest",
-                            p_el_per_sample=0.2, p_rot_per_sample=0.2, p_scale_per_sample=0.2)
-        )
-        tr_transforms.append(MirrorTransform(axes=(0, 1, 2)))
-        tr_transforms.append(BrightnessMultiplicativeTransform((0.7, 1.5), per_channel=True, p_per_sample=0.15))
+        tr_transforms = tr_transforms
+        # tr_transforms.append(SpatialTransform_2(patch_size=(patch_size), random_crop=rnd_crop,
+        #                      patch_center_dist_from_border=[i // 2 for i in patch_size],
+        #                      do_elastic_deform=elastic_deform, deformation_scale=(0, 0.25),
+        #                      do_rotation=rotate,
+        #                      angle_x=(-0.1, 0.1), angle_y=(0, 1e-8), angle_z=(0, 1e-8),
+        #                      scale=(0.9, 1.2),
+        #                      border_mode_data="nearest", border_mode_seg="nearest",
+        #                     p_el_per_sample=0.2, p_rot_per_sample=0.2, p_scale_per_sample=0.2)
+        # )
+        # tr_transforms.append(MirrorTransform(axes=(0, 1, 2)))
+        # tr_transforms.append(BrightnessMultiplicativeTransform((0.7, 1.5), per_channel=True, p_per_sample=0.15))
         # tr_transforms.append(GaussianNoiseTransform(noise_variance=(0, 0.05), p_per_sample=0.20)) #0.15
         # tr_transforms.append(GaussianBlurTransform(blur_sigma=(0.2, 0.5), different_sigma_per_channel=True,
         #                                            p_per_channel=0.5, p_per_sample=0.10)) #0.10
@@ -539,5 +546,6 @@ def get_simclr_pipeline_transform(mode='train', patch_size=(1,30,30,30), base_tr
     tr_transforms = Compose(tr_transforms)
     if double_headed:
         #tr_transforms = SimCLRDataTransform(tr_transforms, tr_transforms)
-        tr_transforms = SimCLRDataTransform(tr_transforms)
+        #tr_transforms = SimCLRDataTransform(tr_transforms)
+        tr_transforms = DoubleHeadedTransform(tr_transforms, tr_transforms)
     return tr_transforms
