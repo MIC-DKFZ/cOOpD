@@ -26,6 +26,7 @@ def get_metrics(scores, labels):
             auprc = float(_compute_auprc(prec, rec))
             fpr, tpr, _ = _compute_roc(fps, tps, thresholds)
             auroc = float(metrics.auc(fpr, tpr))
+
             val_dict['AUROC'] = auroc 
             val_dict['AUPRC'] = auprc 
             val_dict['FPR@TPR=0.95'] = float(fpr_tpr_095)

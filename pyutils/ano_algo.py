@@ -43,11 +43,12 @@ def visualize_segmentations(batch_dict, score_sample_dict, score_pixel_dict, pat
             plt.savefig(os.path.join(path, '{}{} {}.png'.format(prefix, key, name)))
             plt.close(fig='all')
 
-def helper_score(out_dict, key, val, patient_names):
+def helper_score(out_dict, key, val, patient_names, aggregate=False):
     out_dict[key] = dict()
 
     score_names_sample_dict = {}
-    print(val)
+    print('agg', aggregate)
+    print('val', val)
     print(patient_names)
 
     for key_n, value_n in zip(patient_names, val):
@@ -70,8 +71,11 @@ def helper_score(out_dict, key, val, patient_names):
 
     avg_score_names_sample_dict = {k: sum(score_names_sample_dict[k]) / len(score_names_sample_dict[k]) for k in
                                    score_names_sample_dict}
-    # To get a score by image, uncomment:
-    #val = np.array(list(avg_score_names_sample_dict.values()))
+    # To get a score by image:
+    if aggregate:
+        val = np.array(list(avg_score_names_sample_dict.values()))
+
+    print('val',val)
 
     return avg_score_names_sample_dict, val
 
@@ -99,28 +103,48 @@ def visualize_scores(score_sample_dict, batch_dict, path, name='Test'):
         inliers_complete = scores[batch_dict[label].flatten()==0]
         outliers_complete = scores[batch_dict[label].flatten()==1]
 
-        inliers_wnames, inliers = helper_score(out_dict, key, inliers_complete, patient_names)
-        ouliers_wname, outliers = helper_score(out_dict, key, outliers_complete, patient_names)
+        patient_names_inliers = patient_names[batch_dict[label].flatten()==0]
+        patient_names_outliers = patient_names[batch_dict[label].flatten()==1]
 
-        x_range = (np.quantile(scores, 0), np.quantile(scores, 0.99))
-        thresh = np.quantile(inliers, 0.95)
 
-        ax.hist(inliers, bins, x_range, density=density, color='b', label='Inlier', alpha=0.7)
-        ax.hist(outliers, bins, x_range, density=density, color='r', label='Outlier', alpha=0.7)
-        ax.set_xlabel('Score')
-        if density:
-            ax.set_ylabel('Density')
-        else:
-            ax.set_ylabel('Counts')
-        ax.legend(loc='upper left')
-        plt.tight_layout()
-        pathlib.Path(path).mkdir(parents=True, exist_ok=True)
-        plt.savefig(os.path.join(path, 'hist_{} {}.{}'.format(key, name, save_format)))
-        plt.close(fig='all')
+        aggregate_list = [True, False]
+        for cond in aggregate_list:
 
-        sort_by = 'slice_idxs'
-        fig, ax = plt.subplots()
-        fig.set_size_inches(size)
+            inliers_wnames, inliers = helper_score(out_dict, key, inliers_complete, patient_names_inliers, aggregate=cond)
+            ouliers_wname, outliers = helper_score(out_dict, key, outliers_complete, patient_names_outliers, aggregate=cond)
+
+            if cond:
+                aggregation = 'patient'
+                scores_aux = np.concatenate((inliers, outliers), axis=0)
+                x_range = (np.quantile(scores_aux, 0), np.quantile(scores_aux, 0.99))
+
+            else:
+                aggregation = 'patch'
+                x_range = (np.quantile(scores, 0), np.quantile(scores, 0.99))
+            thresh = np.quantile(inliers, 0.95)
+
+            for density in [True, False]:
+                ax.hist(inliers, bins, x_range, density=density, color='b', label='Inlier', alpha=0.7)
+                ax.hist(outliers, bins, x_range, density=density, color='r', label='Outlier', alpha=0.7)
+                ax.set_xlabel('Score')
+                if density:
+                    ax.set_ylabel('Density')
+                else:
+                    ax.set_ylabel('Counts')
+                ax.legend(loc='upper left')
+                plt.tight_layout()
+                pathlib.Path(path).mkdir(parents=True, exist_ok=True)
+
+                if density:
+                    y_axis = 'density'
+                else:
+                    y_axis = 'counts'
+                plt.savefig(os.path.join(path, 'hist_{}_{}_{} {}.{}'.format(aggregation, key, y_axis, name, save_format)))
+                plt.close(fig='all')
+
+                sort_by = 'slice_idxs'
+                fig, ax = plt.subplots()
+                fig.set_size_inches(size)
 
 
 

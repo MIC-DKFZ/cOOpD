@@ -14,6 +14,7 @@ datasets_common_args = {
         'rotate': True,
         'num_threads_in_multithreaded': 1,
         'double_headed': False,
+        #'input': 'insp',
         #'step': 'pretext'
         'base_train' : 'default'
     }

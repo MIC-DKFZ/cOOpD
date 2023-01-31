@@ -1,7 +1,14 @@
 #datapath : "/home/AD/c817h/Documents/data/data"
 #logpath : "/home/AD/c817h/Documents/data/logs_cradl"
 
-datapath : "/home/silvia/Documents/CRADL/pre-processed"
-logpath : "/home/silvia/Documents/CRADL/logs_cradl"
+#datapath : "/home/silvia/Documents/CRADL/pre-processed/cosyconet"
+#logpath : "/home/silvia/Documents/CRADL/logs_cradl/cosyconet"
 
 
+#datapath : "/home/silvia/E132-Projekte/Projects/2021_Silvia_COPDGene/from_Oliver/CRADL/pre-processed"
+#logpath : "/home/silvia/E132-Projekte/Projects/2021_Silvia_COPDGene/from_Oliver/CRADL/logs_cradl"
+#datapath : "/home/silvia/Documents/CRADL/pre-processed/copdgene"
+#logpath : "/home/silvia/Documents/CRADL/logs_cradl/copdgene"
+
+datapath : "/home/silvia/E132-Projekte/Projects/2021_Silvia_COPDGene/from_Oliver/CRADL/pre-processed/"
+logpath : "/home/silvia/Documents/CRADL/logs_cradl/copdgene"

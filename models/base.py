@@ -274,6 +274,7 @@ class ResNet_Encoder(nn.Module):
         # self.resnet_dict = {"resnet18": models.resnet18(pretrained=False),
         #                     "resnet50": models.resnet50(pretrained=False)}
         self.resnet_dict = {"resnet18": ResNet18(),
+                            "resnet34": ResNet34(),
                             "resnet50": ResNet50()}
 
         self.resnet = self._get_basemodel(base_model)
@@ -294,9 +295,10 @@ class ResNet_Encoder(nn.Module):
             nn.init.kaiming_normal_(conv1.weight, mode='fan_out', nonlinearity='relu')
             self.resnet.conv1 = conv1
         self.resnet.fc = nn.Identity() #should it be self.resnet.linear instead? because I changed this in 239
-        if base_model == 'resnet18':
+        if base_model == 'resnet18' or base_model == 'resnet34' or base_model == 'resnet50':
             self.z_dim = 512
-        else: self.z_dim = 2048
+        else:
+            self.z_dim = 2048
 
 
 
@@ -407,19 +409,19 @@ class ResNet(nn.Module):
         return nn.Sequential(*layers)
 
     def forward(self, x):
-        print('shape', x.shape)
+        #print('shape', x.shape)
         out = F.relu(self.bn1(self.conv1(x)))
-        print('shape', out.shape)
+        #print('shape', out.shape)
         out = self.layer1(out)
-        print('shape', out.shape)
+        #print('shape', out.shape)
         out = self.layer2(out)
-        print('shape', out.shape)
+        #print('shape', out.shape)
         out = self.layer3(out)
-        print('shape', out.shape)
+        #print('shape', out.shape)
         out = self.layer4(out)
-        print('shape', out.shape)
+        #print('shape', out.shape)
         out = F.avg_pool3d(out, 4)
-        print('shape', out.shape)
+        #print('shape', out.shape)
         out = out.view(out.size(0), -1)
         out = self.fc(out) #self.linear(out)
         return out
@@ -467,6 +469,7 @@ class VGG(nn.Module):
     def forward(self, x):
         out = self.features(x)
         out = out.view(out.size(0), -1)
+        #print(out)
         #out = self.classifier(out)
         return out
 

@@ -62,12 +62,12 @@ class Dataset(Dataset):
         label = read['label']
 
         patches = extract_patches_3d_fromMask(insp,label, (1,50,50,50), max_patches=1, random_state=12345)
-        print('aqui', patches.shape)
+        #print('aqui', patches.shape)
         patches = torch.from_numpy(patches).float()#.long()
 
         #print(patches)
         #print(patches.size)
-        print(patches.shape)
+        #print(patches.shape)
 
         return patches
 

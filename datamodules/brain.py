@@ -25,6 +25,7 @@ import pandas as pd
 
 from datamodules.extract_patches import extract_patches_3d_fromMask, extract_allpatches_3d_fromMask, getN_allpatches_3d_fromMask
 
+
 from torch.utils.data import DataLoader, Dataset
 
 import os
@@ -37,6 +38,7 @@ class AbstractAnomalyDataLoader:
             load_args = {}
         self.items = self.load_dataset(base_dir=base_dir, list_patients=list_patients, **load_args)
         print('load is ok')
+        print(base_dir)
 
         self.base_dir = base_dir
         self.list_patients = list_patients
@@ -69,6 +71,7 @@ class AbstractAnomalyDataLoader:
             raise StopIteration()
 
         idx = item % self.data_len
+        #print('aqui1')
 
         return self.get_data_by_idx(idx)
 
@@ -82,6 +85,10 @@ class AbstractAnomalyDataLoader:
 
     @abstractmethod
     def load_dataset(self, base_dir, list_patients, **load_args):
+        pass
+
+    @abstractmethod
+    def get_np_file(self, base_dir, **load_args):
         pass
 
 
@@ -110,6 +117,7 @@ class AnomalyDataSet:
     def __getitem__(self, index):
         item = self.data_loader[index]
         item = self.transforms(**item)
+        print(item)
         return item
 
 # class AnomalyDataSet:
@@ -150,13 +158,17 @@ class WrappedDataset(Dataset):
         self.add_dim = add_dim
 
     def __getitem__(self, index):
+        #print('index', index)
         item = self.dataset[index]
-        print('index_name', item['patient_name'], item['data'].shape)
-        item = self.add_dimension(item) #works like this because I have 50x50x50 and not 1x50x50x50
-        item = self.add_dimension(item) #works like this
+
+        if len(item['data'].shape)== 3:
+            item = self.add_dimension(item) #works like this because I have 50x50x50 and not 1x50x50x50
+            item = self.add_dimension(item) #works like this
+        elif len(item['data'].shape)== 4:
+            item = self.add_dimension(item)  # works like this because I have 50x50x50 and not 1x50x50x50
         item = self.transforms(**item)
         item = self.remove_dimension(item)
-        print('length_item',len(item))
+        #print('length_item',len(item))
         return item
 
     def add_dimension(self, item):
@@ -198,6 +210,8 @@ class SimCLRDataTransform(object):
     def __call__(self, **data_dict):
         xi = self.transform(**data_dict)
         xj = self.transform(**data_dict)
+        # print('heree')
+        # print(xi['data'].shape)
         xi['data'] = (xi['data'], xj['data'])
         return xi
 
@@ -236,20 +250,73 @@ class MultiThreadedDataLoader(object):
             warnings.warn("Queue is empty, None returned")
 
             raise StopIteration
-
+def select_max_patches(data_list, max_patches):
+    df_select = pd.DataFrame(data_list, index=['patient', 'full_name']).T
+    df1 = df_select.groupby('patient')['full_name'].apply(list).reset_index(name='new')
+    data_list = []
+    random.seed(1)
+    for list_name in df1['new'].tolist():
+        if len(list_name) < max_patches:
+            data_list.extend(list_name)
+        else:
+            random_listname = random.sample(list_name, max_patches)
+            data_list.extend(random_listname)
+    return data_list
 
 
 def get_brain_dataset(base_dir,  mode="train", batch_size=64, n_items=None, pin_memory=False,
-                      num_processes=8, drop_last=False, do_reshuffle=True, step='pretext',
+                      num_processes=8, drop_last=False, do_reshuffle=True, step='pretext', realworld_dataset = False,
                       patch_size=(50,50,50), elastic_deform = True, rnd_crop = True, rotate = True,
-                      num_threads_in_multithreaded = 1, base_train = 'default',  double_headed=False, target_size = (1,50,50,50)
+                      num_threads_in_multithreaded = 1, base_train = 'default',  double_headed=False, target_size = (1,50,50,50), input = 'insp', overlap='20', kfold=1, max_patches=None
                       ):
+    print(overlap)
+    print(base_dir)
+    if step=='train_cnn_latent':
+        patches_train = get_list_of_patients(data_folder=base_dir, step='train_cnn_latent', overlap=overlap, kfold = kfold, max_patches=max_patches, realworld_dataset=realworld_dataset)
+        patches_val = get_list_of_patients(data_folder=base_dir, step='eval', overlap=overlap, kfold = kfold, max_patches=max_patches, realworld_dataset=realworld_dataset)
 
-    patches = get_list_of_patients(data_folder= base_dir, step=step)
-    patients = np.unique([i.split('_')[0] for i in patches])
-    train_pat, val_pat = get_split_deterministic(patients, fold=0, num_splits=5, random_state=12345)
-    train = [i for i in patches if i.split('_')[0] in train_pat]
-    val = [i for i in patches if i.split('_')[0] in val_pat]
+        patients_train = np.unique([i.split('_')[0] for i in patches_train])
+        patients_val = np.unique([i.split('_')[0] for i in patches_val])
+
+        print('train_patients', len(np.unique([i.split('_')[1] for i in patches_train])))
+        print('eval_patients', len(np.unique([i.split('_')[1] for i in patches_val])))
+
+        train = [i for i in patches_train if i.split('_')[0] in patients_train]
+        val = [i for i in patches_val if i.split('_')[0] in patients_val]
+
+        print('train_patches', len(train))
+        print('eval_patches', len(val))
+
+
+
+    else:
+        patches = get_list_of_patients(data_folder= base_dir, step=step, overlap=overlap, kfold=kfold, max_patches=max_patches, realworld_dataset=realworld_dataset)
+        patients = np.unique([i.replace('_' + i.split('_')[-1], '') for i in patches]) #np.unique([i.split('_')[0] for i in patches])
+        train_pat, val_pat = get_split_deterministic(patients, fold=0, num_splits=5, random_state=12345)
+        train = [i for i in patches if i.replace('_' + i.split('_')[-1], '') in train_pat]
+        val = [i for i in patches if i.replace('_' + i.split('_')[-1], '') in val_pat]
+
+        # if max_patches:
+        #     train = [[x.split('_')[0] + '_' + x.split('_')[1] for x in train_pat], train_pat]
+        #     val = [[i for i in patches if i.replace('_' + i.split('_')[-1], '') in val_pat], val_pat]
+        #
+        #     #for evaluation of different methods purpose
+        #     df_select = pd.DataFrame(train, index=['patient', 'full_name']).T
+        #     df1 = df_select.groupby('patient')['full_name'].apply(list).reset_index(name='new')
+        #     train = []
+        #     random.seed(1)
+        #     for list_name in df1['new'].tolist():
+        #         if len(list_name) < max_patches:
+        #             train.extend(list_name)
+        #         else:
+        #             random_listname = random.sample(list_name, max_patches)
+        #             train.extend(random_listname)
+        if max_patches:
+            train = [[x.split('_')[0] + '_' + x.split('_')[1] for x in train], train]
+            val = [[x.split('_')[0] + '_' + x.split('_')[1] for x in val], val]
+            #for evaluation of different methods purpose
+            train = select_max_patches(train, max_patches) #this hyperparameter will define how many patches I really need for the final pretext task
+            val = select_max_patches(val, max_patches=300) #this is fixed, I don't need to do the evaluation on all patches
 
     # dataloader_train = DataLoader3D(train, batch_size, patch_size, num_threads_in_multithreaded)
     # dataloader_validation = DataLoader3D(val, batch_size, patch_size, num_threads_in_multithreaded)
@@ -260,14 +327,14 @@ def get_brain_dataset(base_dir,  mode="train", batch_size=64, n_items=None, pin_
     # val_gen = AnomalyDataSet(data_loader=dataloader_validation, transforms= SimCLRDataTransform(tr_transforms), batch_size=batch_size)
 
 
-    data_loader_train = BrainDataLoader(base_dir=base_dir, list_patients=train, n_items=n_items)
+    data_loader_train = BrainDataLoader(base_dir=base_dir, list_patients=train, n_items=n_items, input = input, overlap= overlap, kfold=kfold, max_patches=max_patches)
 
 
-    data_loader_val = BrainDataLoader(base_dir=base_dir, list_patients=val, n_items=n_items)
+    data_loader_val = BrainDataLoader(base_dir=base_dir, list_patients=val, n_items=n_items, input = input, overlap=overlap, kfold=kfold, max_patches=max_patches)
 
     if step=='pretext':
         double_headed = True
-    if step=='fitting_GMM' or step=='attention_mech':
+    if step=='fitting_GMM' or step=='train_cnn_latent':
         mode='fit' #val
 
     transforms = get_simclr_pipeline_transform(mode, patch_size, rnd_crop=rnd_crop,
@@ -326,14 +393,14 @@ def get_brain_dataset_withoutSIMCLR(base_dir,  mode="train", batch_size=6, n_ite
     return anomaly_train, anomaly_val
 
 def get_brain_dataset_eval(base_dir,  mode="train", batch_size=64, n_items=None, pin_memory=False,
-                      num_processes=8, drop_last=False, do_reshuffle=True, step='pretext',
+                      num_processes=8, drop_last=False, do_reshuffle=True, step='pretext', realworld_dataset=False,
                       patch_size=(50,50,50), elastic_deform = True, rnd_crop = True, rotate = True,
-                      num_threads_in_multithreaded = 1, base_train = 'default',  double_headed=False, target_size = (1,50,50,50)
+                      num_threads_in_multithreaded = 1, base_train = 'default',  double_headed=False, target_size = (1,50,50,50), input = 'insp', overlap='20', kfold=1, max_patches=None
                       ):
 
-    patients = get_list_of_patients(data_folder= base_dir, step=step)
+    patients = get_list_of_patients(data_folder= base_dir, step=step, overlap=overlap, kfold=kfold, max_patches=max_patches, realworld_dataset=realworld_dataset) #[:6000] #delete
     #data_loader = BrainDataLoader_eval(base_dir=base_dir, list_patients=patients, n_items=n_items)
-    data_loader = BrainDataLoader(base_dir=base_dir, list_patients=patients, n_items=n_items)
+    data_loader = BrainDataLoader(base_dir=base_dir, list_patients=patients, n_items=n_items, input = input, overlap=overlap, kfold=kfold, max_patches=max_patches)
 
     transforms = get_simclr_pipeline_transform(mode, patch_size, rnd_crop=rnd_crop,
                                                   elastic_deform=elastic_deform,
@@ -345,17 +412,19 @@ def get_brain_dataset_eval(base_dir,  mode="train", batch_size=64, n_items=None,
     return anomaly
 
 
-def get_list_of_patients(data_folder, step):
+
+def get_list_of_patients(data_folder, step, overlap: str, kfold: int, max_patches: int, realworld_dataset: bool):
     """Reads the txt files from data_folder where the lists of patients to use for each step are.
     Pretext: 50% of all COPD + 50% of all healthy
-    Fitting GMM: the same 50% of all healthy
-    Evaluation: 25% of all COPD (unseen) + 5% of all healthy (unseen)
-    Test set: 25% of all COPD (unseen) + 5% of all healthy (unseen)
+    Fitting GMM: the same 50% of all healthy, but only patches < 1% emphysema
+    Evaluation: 25% of all COPD (unseen) + 25% of all healthy (unseen)
+    Test set: 25% of all COPD (unseen) + 25% of all healthy (unseen)
 
 
     Args:
         data_folder ([str]): [directory of images]
-        step 'string': 'pretext'. Defaults to 'pretext'. Options: 'pretext', 'fitting_GMM', 'eval', 'test'.
+        step 'string': 'pretext'. Defaults to 'pretext'. Options: 'pretext', 'fitting_GMM', 'eval', 'test'
+        overlap 'str'. Overlap between patches. Currently 0 and 20 are available
     """
     # npy_files = subfiles(data_folder[0], suffix=".npz", join=True)
     # # remove npy file extension
@@ -427,22 +496,33 @@ def get_list_of_patients(data_folder, step):
     #
     # return list_filenames
 
-
+    print('real_world', realworld_dataset)
     if step == 'pretext':
-        with open(os.path.join(data_folder[0], 'patches_for_pretext.txt'), "r") as fp:
+        with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_pretext.txt'), "r") as fp:
             list_filenames = json.load(fp)
+            print(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_pretext.txt'))
     elif step == 'fitting_GMM':
-        with open(os.path.join(data_folder[0], 'patches_for_GMM.txt'), "r") as fp:
+        with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_GMM.txt'), "r") as fp:
             list_filenames = json.load(fp)
     elif step == 'eval':
-        with open(os.path.join(data_folder[0], 'patches_for_eval.txt'), "r") as fp:
+        with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_eval.txt'), "r") as fp:
             list_filenames = json.load(fp)
     elif step == 'test':
-        with open(os.path.join(data_folder[0], 'patches_for_testset.txt'), "r") as fp:
+        with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_testset.txt'), "r") as fp:
             list_filenames = json.load(fp)
-    elif step == 'attention_mech':
-        with open(os.path.join(data_folder[0], 'patches_for_pretext.txt'), "r") as fp:
-            list_filenames = json.load(fp)
+    elif step == 'train_cnn_latent':
+        realworld_dataset = False
+
+        if realworld_dataset:
+            print('real_world', realworld_dataset)
+            print('helloooo')
+            with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold),
+                                   'patches_for_realworld_pretext.txt'), "r") as fp:
+                list_filenames = json.load(fp)
+        else:
+            print('here')
+            with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_pretext.txt'), "r") as fp:
+                list_filenames = json.load(fp)
     else:
         raise NotImplementedError
 
@@ -548,11 +628,15 @@ def extract_fixedN_patches(data_folder, filenames, copd_filenames, healthy_filen
 class BrainDataLoader(AbstractAnomalyDataLoader):
     def __init__(self, base_dir, list_patients, n_items=None,
                  file_pattern='*.npz', label_slice=None, input_slice=0, slice_offset=0,
-                 only_labeled_slices=None, labeled_threshold=10, tmp_dir=None, use_npz=False, add_slices=0):
+                 only_labeled_slices=None, labeled_threshold=10, tmp_dir=None, use_npz=False, add_slices=0, input = 'insp', overlap='0', kfold=5, max_patches=None):
 
         super(BrainDataLoader, self).__init__(base_dir=base_dir, list_patients= list_patients, tmp_dir=tmp_dir, n_items=n_items,
                                               load_args=dict(
-                                                  pattern=file_pattern
+                                                  pattern=file_pattern,
+                                                  input = input,
+                                                  overlap = overlap,
+                                                  kfold = kfold,
+                                                  max_patches = max_patches
                                               ))
 
         self.use_npz = use_npz
@@ -560,8 +644,12 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
         self.label_slice = label_slice
 
         self.add_slices = add_slices
+        self.input = input
 
-    def get_np_file(self, target_name, folder_name):
+
+    def get_np_file(self, target_name, input):
+        #print(target_name)
+
 
         if os.path.exists(target_name):
             try:
@@ -569,114 +657,113 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
                 metadata = load_pickle(target_name.replace('.npz', '.pkl'))
             except:
                 print('error')
-            print(target_name)
+            #print(target_name)
             try:
-                numpy_array_insp = numpy_array['insp'].astype(float)
+                if input == 'insp':
+                    patches = numpy_array['insp'].astype(float)
+                elif input == 'insp_exp_reg':
+                    numpy_array_insp = numpy_array['insp'].astype(float)
+                    numpy_array_exp = numpy_array['exp'].astype(float)
+                    patches = np.stack([numpy_array_insp, numpy_array_exp])
+                elif input== 'insp_jacobian':
+                    numpy_array_insp = numpy_array['insp'].astype(float)
+                    numpy_array_jac = numpy_array['jac'].astype(float)
+                    patches = np.stack([numpy_array_insp, numpy_array_jac])
+                else:
+                    NotImplementedError
+
+
             except:
                 print('error')
-            try:
-                numpy_array_label = numpy_array['label'].astype(float)
-            except:
-                print('error')
-
-            #numpy_array_insp = numpy_array[numpy_array.files['insp']].astype(float)
-            #numpy_array_label = numpy_array[numpy_array.files['label']].astype(float)
-
-            # # import SimpleITK as sitk
-            # # sitk.WriteImage(sitk.GetImageFromArray(numpy_array), '/home/silvia/Downloads/' + os.path.basename(target_name)[:-3] + 'nii.gz')
-            # if os.path.exists(target_name.replace(folder_name, 'labels')):
-            #     numpy_label = np.load(target_name.replace(folder_name, 'labels'), mmap_mode="r")
-            #     numpy_label = numpy_label[numpy_label.files[0]].astype(float)
-            # else:
-            #     print('label_not')
 
 
-            #if reading normal image
-
-            # patch_dim = (1,50,50,50) #change
-            # print('trying for', target_name)
-            # patches = extract_patches_3d_fromMask(numpy_array_insp, numpy_array_label, patch_dim, max_patches=1, random_state=12345) #max_patches=100000
-            # patches = patches[0,:,:,:,:] # removes the dim I had configured for the batch size
-            # print('patch_extract for', target_name)
-
-            #if reading patch
-            patches = numpy_array_insp # removes the dim I had configured for the batch size
-            print('patch_extract for', target_name)
+            #patches = numpy_array_insp # removes the dim I had configured for the batch size
+            #print('patch_extract for', target_name)
 
         return patches, metadata
 
     def get_data_by_idx(self, idx):
-        list_strange = ['052503978', '045682744', '003258511', '10925607x']
-
         full_path = self.items[idx]
-        fn_name = full_path.split('/')[-2]
+        full_path = os.path.join(os.path.dirname(full_path), os.path.basename(full_path).lower())
+        #print('full_path', full_path)
 
-        img_idx = full_path.split('/')[-1].split('_')[0]
-        patch_num = full_path.split('/')[-1].split('.')[0].split('_')[1]
+        #fn_name = full_path.split('/')[-2]
 
-        if img_idx in list_strange:
-            print(img_idx, 'strange might fail')
+        #img_idx = full_path.split('/')[-1].split('_')[0]
+        img_idx = os.path.basename(full_path).replace('_' + os.path.basename(full_path).split('_')[-1], '').replace(' ', '')
+        #print('img_idx',img_idx)
+        #patch_num = full_path.split('/')[-1].split('.')[0].split('_')[1]
 
+        if 'copdgene' in self.base_dir[0]:
+            patient = 'SUBJECT_ID'
+            fev_v = 'FEV1_post'
+            fvc_v = 'FVC_post'
+            gold_v = 'finalGold'
+            fev_fvc_v = 'FEV1_FVC_post'
+        elif 'cosyconet' in self.base_dir[0]:
+            patient = 'patient'
+            fev_v = 'FEV1_GLI'
+            fvc_v = 'FVC_GLI'
+            gold_v = 'GOLD_gli'
+            fev_fvc_v = 'FEV_FVC'
 
 
         #I have to put this somewhere else. where??
+        #print(os.path.join(self.base_dir[0], 'COPD_criteria_complete.csv'), patient)
         annotation = pd.read_csv(os.path.join(self.base_dir[0], 'COPD_criteria_complete.csv'),
-                                 sep=',', converters={'patient': lambda x: str(x)}) #insp_jacobian
+                                 sep=',', converters={patient: lambda x: str(x)}) #insp_jacobian
+
+        #print(self.base_dir[0])
+
+
 
         #drop missing values
-        #annotation = annotation.dropna(subset=['condition_COPD_GOLD'])
-        #print(annotation['condition_COPD_GOLD'])
-        annotation = annotation[annotation.notna()]
-        annotation = annotation.dropna(subset=["condition_COPD_GOLD"])
+        #annotation = annotation[annotation.notna()]
+        #annotation = annotation.dropna(subset=["condition_COPD_GOLD", gold_v, fev_v, fev_fvc_v])
 
-        # pd.set_option("display.max_rows", None, "display.max_columns", None)
-        # print(annotation['patient'], annotation['condition_COPD_GOLD'])
-
-        print(annotation.loc[annotation['patient'].str.lower() == img_idx.lower(), 'condition_COPD_GOLD'].values)
-        print(img_idx+'.nii.gz')
-
-        if annotation.loc[annotation['patient'].str.lower() == img_idx.lower(), 'condition_COPD_GOLD'].values == []:
+        if annotation.loc[annotation[patient].str.lower() == img_idx.lower(), 'condition_COPD_GOLD'].values.size == 0:
             print('empty')
+            print(patient, img_idx)
         else:
-            label = annotation.loc[annotation['patient'].str.lower() == img_idx.lower(), 'condition_COPD_GOLD'].values
+            label = annotation.loc[annotation[patient].str.lower() == img_idx.lower(), 'condition_COPD_GOLD'].values
             label = label.astype(int)
 
+            gold = annotation.loc[annotation[patient].str.lower() == img_idx.lower(), gold_v].values
+            gold[gold <0] = 0
+            gold = gold[0]
 
-            patch_patient, metadata = self.get_np_file(full_path, fn_name)
+            fev = annotation.loc[annotation[patient].str.lower() == img_idx.lower(), fev_v].values[0]
+            fev = fev.astype(float)
+            fev_fvc = annotation.loc[annotation[patient].str.lower() == img_idx.lower(), fev_fvc_v].values[0]
+            fev_fvc = float(fev_fvc)
+            # print('full_path', full_path)
+            patch_patient, metadata = self.get_np_file(full_path, self.input)
 
-            ret_dict = {'data': patch_patient, 'label': label, 'patient_name': img_idx,
-                        'patch_num': patch_num, 'metadata': metadata} #'input_img': fn_name,
-            print('problem is here')
-            print(ret_dict['data'].shape)
-            print(ret_dict['label'])
-            #print(ret_dict['input_img'])
-            print(ret_dict['patient_name'])
-            #print('test',label)
-            if label == []:
-                print('empty')
-            print(img_idx)
+            metadata[gold_v] = gold
+            metadata[fev_v] = fev
+            metadata['fev_fvc'] = fev_fvc
 
-            # try:
-            #     from batchviewer import view_batch
-            #     # same patient, two augm
-            #     # first pair
-            #     view_batch(ret_dict['data'])
-            #
-            #
-            # except ImportError:
-            #     view_batch = None
-            print('patch_successfull_for', img_idx)
-            print(ret_dict['label'], ret_dict['patient_name'], ret_dict['data'].shape)
+            patch_num = metadata['patch_num']
+
+            # print('ret_dict')
+            # print(patch_patient)
+            # print(label)
+            # print(patch_num)
+            # print(metadata)
+
+
+            ret_dict = {'data': patch_patient, 'label': label, 'patient_name': img_idx, 'patch_num': patch_num,'metadata': metadata}
+            #print(ret_dict)
             return ret_dict
 
 
     @staticmethod
-    def load_dataset(base_dir, list_patients, pattern='*.npz'):
+    def load_dataset(base_dir, list_patients, pattern='*.npz', input = 'insp', overlap='0', kfold=1, max_patches=None):
         # print(base_dir)
         # print(list_patients, len(list_patients))
         # directories = []
         # for patient in list_patients:
-        #     directories.append(os.path.join(base_dir[0], patient)+pattern.replace('*', ''))
+        #     dirFectories.append(os.path.join(base_dir[0], patient)+pattern.replace('*', ''))
         #
         # annotation = pd.read_csv(os.path.join(base_dir[0].replace('/pre-processed/no_resample',''), 'COPD_criteria_complete.csv'),
         #                          sep=',', converters={'patient': lambda x: str(x)})
@@ -777,7 +864,7 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
         #directories_read = [base_dir[0] + '/' + sub + pattern.replace('*','') for sub in list_patients]
 
 
-        directories_read = [os.path.join(base_dir[0], 'patches_new_all_overlap0', sub) + pattern.replace('*','') for sub in list_patients]
+        directories_read = [os.path.join(base_dir[0], 'patches_new_all_overlap' + overlap, sub) + pattern.replace('*','') for sub in list_patients]
         #patches_all_overlap0
         return directories_read
 
@@ -787,11 +874,13 @@ class BrainDataLoader(AbstractAnomalyDataLoader):
 class BrainDataLoader_eval(AbstractAnomalyDataLoader):
     def __init__(self, base_dir, list_patients, n_items=None,
                  file_pattern='*.npz', label_slice=None, input_slice=0, slice_offset=0,
-                 only_labeled_slices=None, labeled_threshold=10, tmp_dir=None, use_npz=False, add_slices=0):
+                 only_labeled_slices=None, labeled_threshold=10, tmp_dir=None, use_npz=False, add_slices=0, input = 'insp', overlap='0'):
 
         super(BrainDataLoader_eval, self).__init__(base_dir=base_dir, list_patients= list_patients, tmp_dir=tmp_dir, n_items=n_items,
                                               load_args=dict(
-                                                  pattern=file_pattern
+                                                  pattern=file_pattern,
+                                                  input=input,
+                                                  overlap=overlap
                                               ))
 
         self.use_npz = use_npz
@@ -807,14 +896,14 @@ class BrainDataLoader_eval(AbstractAnomalyDataLoader):
                 numpy_array = np.load(target_name, mmap_mode="r")
             except:
                 print('error')
-            print(target_name)
+            #print(target_name)
             try:
                 numpy_array = numpy_array['arr_0'].astype(float)
             except:
                 print('error')
 
 
-            print('patch_extract for', target_name)
+            #print('patch_extract for', target_name)
 
 
 
@@ -858,28 +947,27 @@ class BrainDataLoader_eval(AbstractAnomalyDataLoader):
             print(len(list_patches_patient))
 
             ret_dict = {'data': list_patches_patient, 'label': label, 'patient_name': img_idx, 'patch_num': patch_num} #'input_img': fn_name,
-            print('problem is here')
-            print(ret_dict['data'].shape)
-            print(ret_dict['label'])
+            #print('problem is here')
+            #print(ret_dict['data'].shape)
+            #print(ret_dict['label'])
             #print(ret_dict['input_img'])
-            print(ret_dict['patient_name'])
+            #print(ret_dict['patient_name'])
             #print('test',label)
             if label == []:
                 print('empty')
             print(img_idx)
 
             print('patch_successfull_for', img_idx)
-            print(ret_dict['label'], ret_dict['patient_name'], ret_dict['data'].shape)
+            #print(ret_dict['label'], ret_dict['patient_name'], ret_dict['data'].shape)
             return ret_dict
 
 
     @staticmethod
-    def load_dataset(base_dir, list_patients, pattern='*.npz'):
-        directories_read = [os.path.join(base_dir[0], 'patches_insp_overlap0') + '/' + sub for sub in list_patients]
+    def load_dataset(base_dir, list_patients, pattern='*.npz', input = 'insp', overlap='0'):
 
-        #just for experiment
-        directories_read = directories_read[:1000]
 
+        directories_read = [os.path.join(base_dir[0], 'patches_new_all_overlap' + overlap, sub) + pattern.replace('*', '') for sub in list_patients]
+        # patches_all_overlap0
         return directories_read
 
 

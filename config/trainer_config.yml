@@ -23,12 +23,12 @@ log_every_n_steps: 50
 log_gpu_memory: null
 logger: true
 max_epochs: 100 #100
-max_steps: null
+max_steps: null #200000 #30000 #null
 min_epochs: 1
 min_steps: null
 num_nodes: 1
 num_processes: 1 # number of processes for distributed training
-num_workers: 8
+num_workers: 8 #8
 overfit_batches: 0.0
 precision: 16
 prepare_data_per_node: true

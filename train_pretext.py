@@ -26,6 +26,9 @@ def main(args):
     if args.experiment == 'flow':
         args.gradient_clip_val = 10.
 
+    if args.resume:
+        args.resume_from_checkpoint = args.resume
+
 
     # Initialize logger
     logdir = os.path.join(glob_conf['logpath'], 'pretext', args.dataset, exp_name)
@@ -34,13 +37,15 @@ def main(args):
     logger = pl.loggers.TensorBoardLogger(logdir, name=args.name, version=args.version)
 
     # Initialize Trainer & Write logger to Trainer
-    ckpt_callback = pl.callbacks.ModelCheckpoint(monitor='val/loss', mode='min')
+    ckpt_callback = pl.callbacks.ModelCheckpoint(monitor='val/loss', mode='min') #, every_n_train_steps=10, save_last=True) #delete every_n_train_steps and save_last
     trainer = pl.Trainer.from_argparse_args(args, logger=logger,callbacks=[ckpt_callback])
 
 
     # Initialize Data
     dm = BrainDataModule(**vars(args))
     dm.prepare_data()
+    args.num_workers = dm.get_workers_for_current_node()
+    print(args)
 
     train_loader, val_loader = dm.train_dataloader()
 
@@ -51,7 +56,6 @@ def main(args):
 
     #Initialize Model
     experiment = get_experiment(args)
-
     trainer.fit(model=experiment, train_dataloader=loader_dict['train'], val_dataloaders=loader_dict['val'])
     print(logger.log_dir)
     #return experiment.logger.log_dir

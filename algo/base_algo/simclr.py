@@ -14,12 +14,15 @@ class SimCLR_base(pl.LightningModule):
     def __init__(self, model, hparams, scheduler= True, temperature=0.5, weight_decay=1e-6, learning_rate= 1e-4, z_dim=512, 
         warmup_epochs=5, optim='adam',mlp_norm=False,*args, **kwargs):
         super(SimCLR_base, self).__init__()
-        self.model = SimCLR(model, z_dim, z_dim//2, batch_norm=mlp_norm)
+        self.z_dim = z_dim
+        #self.model = SimCLR(model, z_dim, z_dim//2, batch_norm=mlp_norm)
+        self.model = SimCLR(model, z_dim, 512, batch_norm=mlp_norm)
+
         self.optim=optim
         self.learning_rate = learning_rate
         self.temperature=temperature
         self.weight_decay= weight_decay
-        self.z_dim = z_dim
+
         self.scheduler = scheduler
         self.warmup_epochs = warmup_epochs
         # self.hparams = hparams
@@ -58,6 +61,8 @@ class SimCLR_base(pl.LightningModule):
             view_batch = None
         import SimpleITK as sitk
         (x_a, x_b), y = process_batch(batch)
+        # print('shapes',x_a.shape)
+        # print(x_b.shape, y)
 
 
         # print(batch['patient_name'])
@@ -109,6 +114,11 @@ class SimCLR_base(pl.LightningModule):
         proj_b, z_b = self.model(x_b)
 
         loss = self.nt_xent_loss_fn(proj_a, proj_b)
+        if torch.isnan(loss):
+            print(batch['patient_name'])
+            print('loss nan', loss)
+            print(batch['patch_num'])
+
 
         loss_dict = {
             f'{mode}/loss':loss
@@ -117,18 +127,18 @@ class SimCLR_base(pl.LightningModule):
         if vis is True:
             vis_dict = {f'{mode}_i/input': x_a, f'{mode}_j/input': x_b}
             for key, value in vis_dict.items():
-                n=self.show_n
-                print(value.shape)
-                print(value[:64].shape)
+                #n=self.show_n
+                #print(value.shape)
+                #print(value[:64].shape)
                 #print(norm(vutils.make_grid(value[:n].to('cpu').detach())))
-                print(list(value.shape))
-                print(list(value.shape)[1])
+                #print(list(value.shape))
+                #print(list(value.shape)[1])
                 # for channel in range(list(value.shape)[1]):
                 #     print(channel)
                 #     print(value[:,channel,:,:,:].shape)
                 #     #vutils.make_grid(value[:n].to('cpu').detach())
                 self.logger.experiment.add_image(key, norm(vutils.make_grid(value[:,:,:,:,20].to('cpu').detach())), self.current_epoch,)
-        print('loss',loss, loss_dict)
+        #print('loss',loss, loss_dict)
         return loss, loss_dict
 
 
@@ -138,12 +148,20 @@ class SimCLR_base(pl.LightningModule):
 
         loss, loss_dict = self.shared_step(batch, sum_samples=True, mode=mode, vis=vis)
         self.log_dict(loss_dict, on_step=False, on_epoch=True)
+        if torch.isnan(loss):
+            print(batch['patient_name'])
+            print('loss nan',loss)
+            print(batch['patch_num'])
         return loss
 
     def validation_step(self, batch, batch_idx, *args, **kwargs):
         mode = 'val'
         vis = bool(batch_idx == 0)
         loss, out_dict = self.shared_step(batch, mode=mode, vis=vis)
+        if torch.isnan(loss):
+            print(batch['patient_name'])
+            print('loss nan',loss)
+            print(batch['patch_num'])
         self.log_dict(out_dict, on_step=False, on_epoch=True)
 
 
@@ -203,6 +221,7 @@ class SimCLR_base(pl.LightningModule):
         if self.scheduler:
             warm_steps = self.warmup_epochs * self.train_iters_per_epoch
             max_steps = self.trainer.max_epochs * self.train_iters_per_epoch
+            #max_steps = self.hparams.max_steps
             lin_scheduler = torch.optim.lr_scheduler.LambdaLR(
                     optimizer=opt,
                     lr_lambda=linear_warmup_decay(warm_steps, max_steps, cosine=True),
@@ -226,7 +245,7 @@ class SimCLR_base(pl.LightningModule):
         parser.add_argument("--temperature", default=0.5, type=float)
         parser.add_argument("--weight_decay", default=1e-6, type=float)
         parser.add_argument("--warmup_epochs", default=5, type=int)
-        parser.add_argument("--model_type", choices=['VGG11', 'VGG13', 'VGG16', 'VGG19', 'resnet18', 'resnet50','CNN3D'], default= 'VGG11', type=str) #CNN3D #resnet18 #VGG11 #VGG13 #VGG16 #VGG19
+        parser.add_argument("--model_type", choices=['VGG11', 'VGG13', 'VGG16', 'VGG19', 'resnet18', 'resnet34', 'resnet50','CNN3D'], default= 'resnet18', type=str) #CNN3D #resnet18 #VGG11 #VGG13 #VGG16 #VGG19
         parser.add_argument("--mlp_norm", default=False, type=str2bool, const=True, nargs='?')
         parser.add_argument("--augmentation", choices=['standard', 'standard-rot','standard-blur', 'ce', 'ce-blur', 'ce-no_crop', 'random_crop', 'random_crop-ce'],default='random_crop', type=str)
 

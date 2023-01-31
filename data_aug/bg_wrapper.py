@@ -311,7 +311,6 @@ def NormalizeData(data):
 def nonlinear_transformation(x):
     # x = np.clip(x, -1000, 1000)
     # x = NormalizeData(x)
-
     points = [[np.min(x), np.min(x)], [np.random.uniform(np.min(x), np.max(x)), np.random.uniform(np.min(x), np.max(x))], [np.random.uniform(np.min(x), np.max(x)), np.random.uniform(np.min(x), np.max(x))], [np.max(x), np.max(x)]]
     #points = [[0,0], [random.random(), random.random()], [random.random(), random.random()], [1,1]]
     xpoints = [p[0] for p in points]

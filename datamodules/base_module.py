@@ -59,10 +59,14 @@ class BaseDatamodule(pl.LightningDataModule):
     def add_data_specific_args(parent_parser):
         #Dataset specific arguments
         parser = ArgumentParser(parents=[parent_parser], add_help=False)
-        parser.add_argument("--batch_size", default=64, type=int)
+        parser.add_argument("--batch_size", default=32, type=int)
         parser.add_argument("--input", default='insp', type=str, choices=['insp', 'insp_exp_reg', 'insp_jacobian', 'jacobian'])
+        parser.add_argument("--overlap", default='0', type=str, choices=['0', '20'])
+        parser.add_argument("--kfold", default=1, type=int)
+        parser.add_argument("--max_patches", default=100, type=int)
+
         #Training specific arguments
         parser.add_argument("--val_size", default=0.1, type=float)
-        parser.add_argument("--num_workers", default=8, type=int)
+        parser.add_argument("--num_workers", default=8, type=int) #8
         return parser
 

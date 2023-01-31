@@ -2,9 +2,10 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from batchgenerators.dataloading.data_loader import DataLoader
-from batchgenerators.transforms.noise_transforms import GaussianNoiseTransform
+from batchgenerators.transforms.noise_transforms import GaussianNoiseTransform, GaussianBlurTransform
 from batchgenerators.transforms.abstract_transforms import Compose
 from batchgenerators.transforms.abstract_transforms import Compose, RndTransform, AbstractTransform
+import numpy as np
 
 class COPDDataloader(DataLoader):
     def __init__(self, data, batch_size, num_threads_in_multithreaded, seed_for_shuffle=1234, return_incomplete=False,
@@ -49,13 +50,101 @@ class COPDDataloader(DataLoader):
 
         return {'data': data, 'label': labels, 'patient': patient_names}
 
+
+class COPDDataloader_attmech_unbalanced(DataLoader):
+    def __init__(self, data, batch_size, patch_size, num_threads_in_multithreaded, seed_for_shuffle=1234, return_incomplete=False,
+                 shuffle=True, sampling_probabilities=None, infinite = True):
+        """
+        data must be a list of patients as returned by get_list_of_patients (and split by get_split_deterministic)
+        patch_size is the spatial size the retured batch will have
+        """
+        super().__init__(data, batch_size, num_threads_in_multithreaded)
+        self.patch_size = patch_size
+        self.num_modalities = 1
+        self.indices = list(range(len(data['labels'])))
+        self.infinite = infinite
+        self.shuffle = shuffle
+        self.return_incomplete = return_incomplete
+        self.seed_for_shuffle = seed_for_shuffle
+        self.rs = np.random.RandomState(self.seed_for_shuffle)
+        self.current_position = None
+        self.was_initialized = False
+        self.last_reached = False
+        self.sampling_probabilities = sampling_probabilities
+    def reset(self):
+        assert self.indices is not None
+
+        self.current_position = self.thread_id * self.batch_size
+
+        self.was_initialized = True
+
+        # no need to shuffle if we are returning infinite random samples
+        if not self.infinite and self.shuffle:
+            self.rs.shuffle(self.indices)
+
+        self.last_reached = False
+
+    def get_indices(self):
+        # if self.infinite, this is easy
+        if self.infinite:
+            #print(self.indices)
+            #print(self.sampling_probabilities)
+            return np.random.choice(self.indices, self.batch_size, replace=True, p=self.sampling_probabilities)
+
+        if self.last_reached:
+            self.reset()
+            raise StopIteration
+
+        if not self.was_initialized:
+            self.reset()
+
+        indices = []
+
+        for b in range(self.batch_size):
+            if self.current_position < len(self.indices):
+                indices.append(self.indices[self.current_position])
+
+                self.current_position += 1
+            else:
+                self.last_reached = True
+                break
+
+        if len(indices) > 0 and ((not self.last_reached) or self.return_incomplete):
+            self.current_position += (self.number_of_threads_in_multithreaded - 1) * self.batch_size
+            return indices
+        else:
+            self.reset()
+            raise
+
+    def generate_train_batch(self):
+        # DataLoader has its own methods for selecting what patients to use next, see its Documentation
+        idx = self.get_indices()
+        patients_for_batch = [self._data['patients'][i] for i in idx]
+
+
+        # initialize empty array for data and seg
+        labels = []
+        patient_names = []
+        # iterate over patients_for_batch and include them in the batch
+        for i, j in enumerate(patients_for_batch):
+
+            patient_data, metadata = self._data['latent'][self._data['patients'].index(j)], self._data['labels'][self._data['patients'].index(j)]
+
+
+            data = patient_data
+            labels.append(metadata)
+            patient_names.append(j)
+
+        return {'data': data, 'label': labels, 'patient': patient_names}
+
+
 def reconstruct_vector_attentionmech(dict_output):
     print(dict_output)
-    patient_name = dict_output['patient'].cpu().detach().numpy()
-    patch_num = dict_output['patch_number'].cpu().detach().numpy()
-    location = dict_output['location'].cpu().detach().numpy()
-    latent = dict_output['latent'].cpu().detach().numpy()
-    labels = dict_output['labels'].cpu().detach().numpy()
+    patient_name = dict_output['patient']
+    patch_num = dict_output['patch_number']
+    location = dict_output['location']
+    latent = dict_output['latent']
+    labels = dict_output['labels'] #.cpu().detach().numpy()
 
     p = patient_name.argsort()
 
@@ -96,13 +185,23 @@ class MixOrderTransform(AbstractTransform):
             data_dict[self.data_key] = (data_dict[self.data_key])[torch.randperm((data_dict[self.data_key]).shape[0])]
         return data_dict
 
-def get_train_transform():
+def get_train_transform(base_train: str, prob_sample: float):
     tr_transforms = []
-    tr_transforms.append(GaussianNoiseTransform(noise_variance=(0, 0.05), p_per_sample=0.30))
-    tr_transforms.append(MixOrderTransform(p_per_sample=0.3))
+    if base_train == "default":
+        tr_transforms.append(GaussianNoiseTransform(noise_variance=(0, 0.05), p_per_sample=prob_sample))
+        tr_transforms.append(MixOrderTransform(p_per_sample=prob_sample))
+    if base_train == 'best_transformations_ever':
+        tr_transforms.append(GaussianNoiseTransform(noise_variance=(0, 0.05), p_per_sample=prob_sample))
+        tr_transforms.append(MixOrderTransform(p_per_sample=prob_sample))
+        tr_transforms.append(GaussianBlurTransform(blur_sigma=(1, 5),
+                                                   p_per_sample=prob_sample,
+                                                   p_per_channel=0.5))
+
+
     tr_transforms = Compose(tr_transforms)
     return tr_transforms
 
+#adapted from https://github.com/AMLab-Amsterdam/AttentionDeepMIL
 class Attention(nn.Module):
     def __init__(self):
         super(Attention, self).__init__()
@@ -123,16 +222,16 @@ class Attention(nn.Module):
         )
 
     def forward(self, x):
-        print(x.shape)
+        #print(x.shape)
         A = self.attention(x)  # NxK
-        print(A.shape)
+        #print(A.shape)
         A = torch.transpose(A, 1, 0)  # KxN
-        print(A.shape)
+        #print(A.shape)
         A = F.softmax(A, dim=1)  # softmax over N
-        print(A.shape)
+        #print(A.shape)
 
         M = torch.mm(A, x)  # KxL
-        print(M.shape)
+        #print(M.shape)
 
 
         Y_prob = self.classifier(M)
@@ -144,8 +243,8 @@ class Attention(nn.Module):
     def calculate_classification_error(self, X, Y):
         Y = Y.float()
         _, Y_hat, _ = self.forward(X)
-        print(Y)
-        print(Y_hat)
+        #print(Y)
+        #print(Y_hat)
         error = 1. - Y_hat.eq(Y).cpu().float().mean().item()
 
         return error, Y_hat
