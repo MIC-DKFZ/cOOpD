@@ -547,10 +547,10 @@ class ResNet(nn.Module):
         out = adapt(out)
         #print('shape', out.shape)
         out = out.view(out.size(0), -1)
-        #print('shape', out.shape)
-        #print('fc', self.fc)
+        print('shape', out.shape)
+        print('fc', self.fc)
         out = self.fc(out) #self.linear(out)
-        #print('shape', out.shape)
+        print('shape', out.shape)
 
         return out
 
@@ -582,11 +582,9 @@ class LeNet3D(nn.Module):
         self.conv2 = nn.Conv3d(channels_in*2, channels_in*4, kernel_size=2)
         #self.fc1 = nn.Linear(channels_in*4 * 2 * 1 * 2, 120)
         #self.fc1 = nn.Linear(channels_in*4 * 2 * 2 * 2, 120)
-        #self.fc1 = nn.Linear(channels_in*4 * 3 * 3 * 3, 120) #resnet18 or 34 1 channel
+        self.fc1 = nn.Linear(channels_in*4 * 3 * 3 * 3, 120) #resnet18 or 34 1 channel
         #self.fc1 = nn.Linear(channels_in*4 *4 * 3 * 3, 120)  #resnet34
-        self.fc1 = nn.Linear(channels_in*4 *3 * 3 * 2, 120) #resnet18 2 channel
-
-
+        #self.fc1 = nn.Linear(channels_in*4 *3 * 3 * 2, 120) #resnet18 2 channel
 
         self.fc2 = nn.Linear(120, 60)
         self.fc3 = nn.Linear(60, num_classes)

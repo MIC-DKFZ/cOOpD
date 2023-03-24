@@ -17,7 +17,7 @@ from torch.autograd import Variable
 import shutil
 from torch.utils.tensorboard import SummaryWriter
 import SimpleITK as sitk
-from latent_gen.cnn_aftercradl import reconstruct_img, COPDDataloader_eval, off_aug, activate_off_aug, COPDDataloader_unbalanced, ResNet_Encoder, ResNet18, ResNet50, get_train_transform_cnn, OnlyLinear, LeNet3D, Small_LeNet, Fully_Connected
+from latent_gen.cnn_aftercradl import reconstruct_img, COPDDataloader_eval, off_aug, activate_off_aug, COPDDataloader_unbalanced, ResNet_Encoder, ResNet18, ResNet50, ResNet34, get_train_transform_cnn, OnlyLinear, LeNet3D, Small_LeNet, Fully_Connected
 from models import base
 import torch.nn as nn
 from data_aug.bg_wrapper import get_simclr_pipeline_transform
@@ -29,19 +29,19 @@ import yaml
 
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet34/default/17674151') #12085919')#simclr-VGG13/default/10920176')#simclr-VGG16/default/11007765')
+parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet34/default/17142285') #12085919')#simclr-VGG13/default/10920176')#simclr-VGG16/default/11007765')
 parser.add_argument('--num_epoch', type=int, default=1)
 parser.add_argument('--resave', type=str2bool, nargs='?', const=False, default=False)
 parser.add_argument('--reconstruct', type=str2bool, nargs='?', const=False, default=False)
 parser.add_argument('--base_train', type=str, default='best_transformations_ever')
-parser.add_argument('--batch_size', type=int, default=40)
+parser.add_argument('--batch_size', type=int, default=40) #40
 parser.add_argument('--lr', type=float, default=1e-2)
 parser.add_argument('--wd', type=float, default=3e-5)
 parser.add_argument('--probs', type=float, default=0.2)
-parser.add_argument("--model_type", choices=['resnet18', 'resnet50', 'linear', 'LeNet3D', 'Small_LeNet', 'Fully_Connected'], default='LeNet3D', type=str)
+parser.add_argument("--model_type", choices=['resnet18', 'resnet50', 'resnet34', 'linear', 'LeNet3D', 'Small_LeNet', 'Fully_Connected'], default='LeNet3D', type=str)
 parser.add_argument("--exp_type", choices=['attention', 'cnn'], default='cnn', type=str)
 parser.add_argument("--classification_type", choices=['binary', 'multiclass'], default='binary', type=str)
-parser.add_argument("--input", default='insp_exp_reg', type=str,
+parser.add_argument("--input", default='insp', type=str,
                     choices=['insp', 'insp_exp_reg', 'insp_jacobian', 'jacobian'])
 parser.add_argument("--overlap", default='20', type=str, choices=['0', '20'])
 parser.add_argument("--realworld_dataset", default=False)
@@ -369,7 +369,8 @@ def train_model_cnn(start_epochs, n_epochs, num_batches_per_epoch, num_val_batch
             #     data = cradl(images)
 
             outputs = model(data)
-            #print(outputs)
+            print(outputs.shape)
+            print(labels.shape)
             loss = criterion(outputs, labels)
             loss /= batch_size
             # backward pass
@@ -401,7 +402,9 @@ def train_model_cnn(start_epochs, n_epochs, num_batches_per_epoch, num_val_batch
             print('label',label_name)
             labels = torch.from_numpy(np.array(batch[label_name])).long().to(device)
             outputs = model(data)
-            #print('outputs', outputs)
+            print('outputs, label', len(batch['data']), batch[label_name])
+            print('outputs', outputs.shape)
+            print('labels', labels.shape)
 
             loss = criterion(outputs, labels)
             valid_loss += loss.item()
@@ -663,7 +666,7 @@ def main_cnn(path, resave=False, reconstruct= False, num_epoch=1, batch_size = 2
 
 
     for files in train_aux.files:
-        #train[files] = train_aux[files]
+        train[files] = train_aux[files]
         val[files] = val_aux[files]
 
 
@@ -684,8 +687,8 @@ def main_cnn(path, resave=False, reconstruct= False, num_epoch=1, batch_size = 2
 
 
     dataloader_train_unbalanced = COPDDataloader_unbalanced(train, batch_size, patch_size, 1, sampling_probabilities=prob_train) #prob_train
-    #dataloader_val_unbalanced = COPDDataloader_unbalanced(val, batch_size, patch_size, 1, sampling_probabilities=prob_val) #prob_val
-    dataloader_val_unbalanced = COPDDataloader_eval(val, batch_size, patch_size, 1, shuffle=False) #prob_train
+    dataloader_val_unbalanced = COPDDataloader_unbalanced(val, batch_size, patch_size, 1, sampling_probabilities=prob_val) #prob_val
+    #dataloader_val_unbalanced = COPDDataloader_eval(val, batch_size, patch_size, 1, shuffle=False) #prob_train
 
 
     #print('patch_size', patch_size, [i // 2 for i in patch_size])
@@ -737,6 +740,8 @@ def main_cnn(path, resave=False, reconstruct= False, num_epoch=1, batch_size = 2
         model = OnlyLinear(patch_size=patch_size, num_classes= num_classes, channels_in=num_channels).to(device)
     elif model_type == 'resnet18':
         model = ResNet18().to(device)
+    elif model_type == 'resnet34':
+        model = ResNet34().to(device)
     elif model_type == 'resnet50':
         model = ResNet50().to(device)
     elif model_type == 'LeNet3D':

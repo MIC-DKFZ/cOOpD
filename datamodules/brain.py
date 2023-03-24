@@ -288,7 +288,6 @@ def get_brain_dataset(base_dir,  mode="train", batch_size=64, n_items=None, pin_
         print('eval_patches', len(val))
 
 
-
     else:
         patches = get_list_of_patients(data_folder= base_dir, step=step, overlap=overlap, kfold=kfold, max_patches=max_patches, realworld_dataset=realworld_dataset)
         patients = np.unique([i.replace('_' + i.split('_')[-1], '') for i in patches]) #np.unique([i.split('_')[0] for i in patches])
@@ -395,10 +394,22 @@ def get_brain_dataset_withoutSIMCLR(base_dir,  mode="train", batch_size=6, n_ite
 def get_brain_dataset_eval(base_dir,  mode="train", batch_size=64, n_items=None, pin_memory=False,
                       num_processes=8, drop_last=False, do_reshuffle=True, step='pretext', realworld_dataset=False,
                       patch_size=(50,50,50), elastic_deform = True, rnd_crop = True, rotate = True,
-                      num_threads_in_multithreaded = 1, base_train = 'default',  double_headed=False, target_size = (1,50,50,50), input = 'insp', overlap='20', kfold=1, max_patches=None
+                      num_threads_in_multithreaded = 1, base_train = 'default',  double_headed=False, target_size = (1,50,50,50),
+                           input = 'insp', overlap='20', kfold=1, max_patches=None, split_pts=0,
                       ):
 
-    patients = get_list_of_patients(data_folder= base_dir, step=step, overlap=overlap, kfold=kfold, max_patches=max_patches, realworld_dataset=realworld_dataset) #[:6000] #delete
+    patients = get_list_of_patients(data_folder= base_dir, step=step, overlap=overlap, kfold=kfold, max_patches=max_patches,
+                                    realworld_dataset=realworld_dataset, split_pts=split_pts)#[0:3000] #delete
+    patients_unique = np.unique(
+        [i.replace('_' + i.split('_')[-1], '') for i in patients])  # np.unique([i.split('_')[0] for i in patches])
+    print('eval patients', len(patients_unique))
+    print(patients_unique)
+    # print(patients_unique[423])
+    # print(patients_unique[480])
+    # print(patients_unique[829])
+    # print(patients_unique[830])
+    # print(patients_unique[831])
+    # print(patients_unique[840])
     #data_loader = BrainDataLoader_eval(base_dir=base_dir, list_patients=patients, n_items=n_items)
     data_loader = BrainDataLoader(base_dir=base_dir, list_patients=patients, n_items=n_items, input = input, overlap=overlap, kfold=kfold, max_patches=max_patches)
 
@@ -413,7 +424,7 @@ def get_brain_dataset_eval(base_dir,  mode="train", batch_size=64, n_items=None,
 
 
 
-def get_list_of_patients(data_folder, step, overlap: str, kfold: int, max_patches: int, realworld_dataset: bool):
+def get_list_of_patients(data_folder, step, overlap: str, kfold: int, max_patches: int, realworld_dataset: bool, split_pts: int):
     """Reads the txt files from data_folder where the lists of patients to use for each step are.
     Pretext: 50% of all COPD + 50% of all healthy
     Fitting GMM: the same 50% of all healthy, but only patches < 1% emphysema
@@ -505,8 +516,46 @@ def get_list_of_patients(data_folder, step, overlap: str, kfold: int, max_patche
         with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_GMM.txt'), "r") as fp:
             list_filenames = json.load(fp)
     elif step == 'eval':
-        with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_eval.txt'), "r") as fp:
+        with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_testset.txt'), "r") as fp: #eval
             list_filenames = json.load(fp)
+            #weird = ['COPDGene_H49499', 'COPDGene_J39233', 'COPDGene_Q66767']
+            #weird = ['COPDGene_H49499', 'COPDGene_Q66767', 'COPDGene_Q65769', 'COPDGene_Q61117', 'COPDGene_Q82856']
+            #weird = ['COPDGene_Q52970', 'COPDGene_Q59308', 'COPDGene_Q61117', 'COPDGene_Q65769', 'COPDGene_Q66767']
+            #weird = ['COPDGene_A', 'COPDGene_B', 'COPDGene_C', 'COPDGene_D', 'COPDGene_F', 'COPDGene_G', 'COPDGene_H']
+
+            #weird = ['COPDGene_E', 'COPDGene_I', 'COPDGene_J', 'COPDGene_K', 'COPDGene_L', 'COPDGene_M', 'COPDGene_N']
+
+            #weird = ['COPDGene_O', 'COPDGene_P', 'COPDGene_Q', 'COPDGene_R', 'COPDGene_S', 'COPDGene_T', 'COPDGene_U']
+
+            #weird = ['COPDGene_V', 'COPDGene_W', 'COPDGene_Y', 'COPDGene_X', 'COPDGene_Z']
+
+            if split_pts==1:
+
+                weird = ['COPDGene_A', 'COPDGene_B', 'COPDGene_C', 'COPDGene_D', 'COPDGene_E', 'COPDGene_F', 'COPDGene_G',
+                     'COPDGene_H', 'COPDGene_I', 'COPDGene_J', 'COPDGene_K', 'COPDGene_L', 'COPDGene_M', 'COPDGene_O',
+                     'COPDGene_P', 'COPDGene_Q']
+                list_filenames = [x for x in list_filenames if x.split('_')[0] + '_' + x.split('_')[1][0] in weird]
+
+            elif split_pts==2:
+
+                weird = ['COPDGene_N', 'COPDGene_R', 'COPDGene_S', 'COPDGene_T', 'COPDGene_U', 'COPDGene_V', 'COPDGene_W',
+                     'COPDGene_Y', 'COPDGene_X', 'COPDGene_Z']
+                list_filenames = [x for x in list_filenames if x.split('_')[0] + '_' + x.split('_')[1][0] in weird]
+
+            #print(weird)
+            #print(list_filenames)
+            #print(list_filenames[1])
+            #print(list_filenames[1].split('_')[0] + '_' + list_filenames[1].split('_')[1][0])
+
+            #list_filenames = [x for x in list_filenames if x.replace('_' + x.split('_')[-1], '') not in weird]
+
+            #print(list_filenames)
+            #print(list_filenames[1])
+
+            else:
+                print('No split of pts list')
+
+
     elif step == 'test':
         with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_testset.txt'), "r") as fp:
             list_filenames = json.load(fp)

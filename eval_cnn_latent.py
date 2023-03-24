@@ -17,7 +17,7 @@ from torch.autograd import Variable
 import shutil
 from torch.utils.tensorboard import SummaryWriter
 import SimpleITK as sitk
-from latent_gen.cnn_aftercradl import COPDDataloader_eval, off_aug, activate_off_aug, COPDDataloader_unbalanced, ResNet_Encoder, ResNet18, ResNet50, get_train_transform_cnn, OnlyLinear, LeNet3D, Small_LeNet, Fully_Connected
+from latent_gen.cnn_aftercradl import COPDDataloader_eval, off_aug, activate_off_aug, COPDDataloader_unbalanced, ResNet_Encoder, ResNet18, ResNet34, ResNet50, get_train_transform_cnn, OnlyLinear, LeNet3D, Small_LeNet, Fully_Connected
 from models import base
 import torch.nn as nn
 from data_aug.bg_wrapper import get_simclr_pipeline_transform
@@ -30,19 +30,19 @@ from sklearn.metrics import roc_auc_score, precision_recall_curve, auc, accuracy
 import pandas as pd
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet34/default/17674151') #12085919')#simclr-VGG13/default/10920176')#simclr-VGG16/default/11007765')
+parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet34/default/17142285') #12085919')#simclr-VGG13/default/10920176')#simclr-VGG16/default/11007765')
 parser.add_argument('--num_epoch', type=int, default=1)
 parser.add_argument('--resave', type=str2bool, nargs='?', const=False, default=False)
 parser.add_argument('--reconstruct', type=str2bool, nargs='?', const=False, default=False)
 parser.add_argument('--batch_size', type=int, default=10)
 parser.add_argument('--wd', type=float, default=3e-5)
-parser.add_argument("--model_type", choices=['resnet18', 'resnet50', 'linear', 'LeNet3D', 'Small_LeNet', 'Fully_Connected'], default='LeNet3D', type=str)
+parser.add_argument("--model_type", choices=['resnet18', 'resnet50', 'resnet34', 'linear', 'LeNet3D', 'Small_LeNet', 'Fully_Connected'], default='LeNet3D', type=str)
 parser.add_argument("--classification_type", choices=['binary', 'multiclass'], default='binary', type=str)
-parser.add_argument("--input", default='insp_exp_reg', type=str,
+parser.add_argument("--input", default='insp', type=str,
                     choices=['insp', 'insp_exp_reg', 'insp_jacobian', 'jacobian'])
 parser.add_argument("--overlap", default='20', type=str, choices=['0', '20'])
 parser.add_argument("--realworld_dataset", default=False)
-parser.add_argument('-exp', '--experiment', type=str, default='version_16')
+parser.add_argument('-exp', '--experiment', type=str, default='version_1')
 
 
 def save_outputs(path, resave=False, num_epoch=1, get_slice_idx=True, input='insp', overlap = '0', realworld_dataset= False):
@@ -194,9 +194,12 @@ def reconstruct_img(path, reconstruct = False):
             dict_output_Test = {'patients': final_patient_name, 'label': final_labels_org, 'gold': final_gold_org, 'fev': final_fev_org, 'fev_fvc': final_fev_fvc_org, 'latent': final_latent_org, 'reconstructed': reconstructed_test}
         # size normal 17, 16, 19
         # size real world 17, 12, 16
-        shape_max_x = 17 # max([item.shape[1] for item in dict_output_Test['reconstructed']])
-        shape_max_y = 12 # max([item.shape[2] for item in dict_output_Test['reconstructed']])
-        shape_max_z = 16 # max([item.shape[3] for item in dict_output_Test['reconstructed']])
+        # size insp 0% 16,15,18
+        # size insp 20% 16,14,16
+        # size insp exp 0% 16,15,18
+        shape_max_x = 16 #max([item.shape[1] for item in dict_output_Test['reconstructed']])
+        shape_max_y = 14 #max([item.shape[2] for item in dict_output_Test['reconstructed']])
+        shape_max_z = 16 #max([item.shape[3] for item in dict_output_Test['reconstructed']])
         final_dict = []
         reconstructed = dict_output_Test['reconstructed']
 
@@ -360,7 +363,22 @@ if __name__ == "__main__":
 
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    model = LeNet3D(num_classes=num_classes, channels_in=num_channels).to(device)
+    if model_type == 'linear':
+        model = OnlyLinear(patch_size=patch_size, num_classes= num_classes, channels_in=num_channels).to(device)
+    elif model_type == 'resnet18':
+        model = ResNet18().to(device)
+    elif model_type == 'resnet34':
+        model = ResNet34().to(device)
+    elif model_type == 'resnet50':
+        model = ResNet50().to(device)
+    elif model_type == 'LeNet3D':
+        model = LeNet3D(num_classes= num_classes, channels_in=num_channels).to(device)
+    elif model_type == 'Small_LeNet':
+        model = Small_LeNet(num_classes= num_classes, channels_in=num_channels).to(device)
+    elif model_type == 'Fully_Connected':
+        model = Fully_Connected(num_classes= num_classes, channels_in=num_channels, patch_size=patch_size).to(device)
+    else:
+        NotImplemented
     ch = torch.load(os.path.join(path_to_experiment, 'best_model', 'best_model.pt'))
     model.load_state_dict(ch['state_dict'])
     model.cuda()

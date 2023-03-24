@@ -27,8 +27,10 @@ import csv
 from sys import getsizeof
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet18/default/17030594')
+parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet34/default/17674151')
 parser.add_argument('--name_exp', type=str, default='full')
+parser.add_argument('-s', '--split_patients', type=int, default= 0)
+
 
 
 
@@ -68,16 +70,19 @@ def evaluate_ano_loader(ano_algo, dataloader, kwargs_pix=dict(), kwargs_sample=d
             # print(batch['patient_num'])
 
             if 'sample' in scoring:
-                score_sample = ano_algo.score_samples(batch, **kwargs_sample)
-                score_sample_dict.insert(score_sample)
+                #score_sample = ano_algo.score_samples(batch, **kwargs_sample)
+                #score_sample_dict.insert(score_sample)
+                score_sample_dict.insert(ano_algo.score_samples(batch, **kwargs_sample))
 
-            if 'pixel' in scoring:
-                score_pix = ano_algo.score_pixels(batch, **kwargs_pix)
-                score_pixel_dict.insert(score_pix)
+
+            # if 'pixel' in scoring:
+            #     score_pix = ano_algo.score_pixels(batch, **kwargs_pix)
+            #     score_pixel_dict.insert(score_pix)
 
 
     except RuntimeError:
-        print(batch)
+        print('RunTimeError fail')
+        #print(batch)
 
     ano_algo.zero_grad()
     torch.cuda.empty_cache()
@@ -149,8 +154,8 @@ def get_sample_metrics(batch_dict, score_sample_dict, per_patient = True):
     patient_names = batch_dict['patient_name'].flatten()
 
     if per_patient:
-
         names_labels_dict = dict(zip(patient_names, labels))
+        print('number of patients', len(names_labels_dict))
         #labels without repeated values
         labels = np.array(list(names_labels_dict.values()))
 
@@ -169,23 +174,23 @@ def get_sample_metrics(batch_dict, score_sample_dict, per_patient = True):
                 else:
                     score_names_sample_dict[key_n].append(value_n)
 
-            print(score_names_sample_dict)
-            print(score_names_sample_dict.values())
-            print(score_names_sample_dict.keys())
-            print(score_names_sample_dict.items())
+            # print(score_names_sample_dict)
+            # print(score_names_sample_dict.values())
+            # print(score_names_sample_dict.keys())
+            # print(score_names_sample_dict.items())
 
             dataframe1 = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in score_names_sample_dict.items()]))
-            print(dataframe1)
-            print(patient_names)
+            # print(dataframe1)
+            # print(patient_names)
 
-            for k in score_names_sample_dict:
-                print(k)
-                print(score_names_sample_dict[k])
-                print(sum(score_names_sample_dict[k]) / len(score_names_sample_dict[k]))
-                print(np.mean(score_names_sample_dict[k]))
-                print(np.median(score_names_sample_dict[k]))
-                print(np.quantile(score_names_sample_dict[k], 0.25))
-                print(min(score_names_sample_dict[k]))
+            # for k in score_names_sample_dict:
+            #     print(k)
+            #     print(score_names_sample_dict[k])
+            #     print(sum(score_names_sample_dict[k]) / len(score_names_sample_dict[k]))
+            #     print(np.mean(score_names_sample_dict[k]))
+            #     print(np.median(score_names_sample_dict[k]))
+            #     print(np.quantile(score_names_sample_dict[k], 0.25))
+            #     print(min(score_names_sample_dict[k]))
 
             avg_score_names_sample_dict = {k: np.mean(score_names_sample_dict[k]) for k in score_names_sample_dict}
             #To get a score (AUROC etc) by image, uncomment:
@@ -239,15 +244,15 @@ def get_sample_metrics(batch_dict, score_sample_dict, per_patient = True):
             out_dict = dict()
 
             score_names_sample_dict = {}
-            print(val)
-            print(labels)
-            print(patient_names)
+            # print(val)
+            # print(labels)
+            # print(patient_names)
             out_dict = get_metrics(val, labels)
 
     return out_dict
         
 
-def eval_encoder_model(path, Model_cls=Abstract_OOD, version='results_plot_1', model_kwargs={'n_components':1},
+def eval_encoder_model(path, Model_cls=Abstract_OOD, version='results_plot_1', split_pts=0, model_kwargs={'n_components':1},
             name_exp='isles_brats'):
     # Load and Prepare Model
     ano_algo, model_name = get_ood_encoder(path, Model_cls=Model_cls, model_kwargs=model_kwargs, version=version, get_name=True)
@@ -255,7 +260,7 @@ def eval_encoder_model(path, Model_cls=Abstract_OOD, version='results_plot_1', m
     model_path = os.path.join(path, version, model_name)
     
     # Load and Prepare Data #change
-    exp_loader_dict = get_data_loaders(name_exp, model_kwargs['input'], model_kwargs['overlap'])
+    exp_loader_dict = get_data_loaders(name_exp, model_kwargs['input'], model_kwargs['overlap'], split_pts)
 
     #####
     for dataset, loader in exp_loader_dict.items():
@@ -314,6 +319,9 @@ def eval_ano_algo(ano_algo, model_path, loader_dict, scoring=['sample'],vis=Fals
                     visualize_segmentations(batch_dict, score_sample_dict, score_pixel_dict, save_path, name=dataset)
             else:
                 batch_dict, score_sample_dict, score_pixel_dict = evaluate_ano_loader(ano_algo=ano_algo, dataloader=loader, kwargs_pix=kw_px, scoring=scoring)
+                print('n patients,',
+                      len(dict(zip(batch_dict['patient_name'].flatten(), batch_dict['label'].flatten()))))
+
                 if vis:
                     save_path = os.path.join(model_path, dataset, name)
                     if not os.path.exists(save_path):
@@ -329,11 +337,12 @@ def eval_ano_algo(ano_algo, model_path, loader_dict, scoring=['sample'],vis=Fals
         df.rename(columns={"nll": 'score'})
 
 
-
         visualize_scores(score_sample_dict, batch_dict, save_path, name=dataset) #scores by patch
 
         if vis and 'pixel' in scoring:
             visualize_gt(model_path, batch_dict, dataset)
+        print('n patients,',len(dict(zip(batch_dict['patient_name'].flatten(), batch_dict['label'].flatten()))))
+        print('n patients,',dict(zip(batch_dict['patient_name'].flatten(), batch_dict['label'].flatten())))
 
         sample_metrics = get_sample_metrics(batch_dict, score_sample_dict, per_patient=True)
         sample_dict[dataset] = sample_metrics
@@ -368,7 +377,7 @@ def eval_ano_algo(ano_algo, model_path, loader_dict, scoring=['sample'],vis=Fals
 
 version= rel_save
 
-def get_data_loaders(name_exp, input, overlap):
+def get_data_loaders(name_exp, input, overlap, split_pts):
     from config.datasets.brain import eval_loader_args
     arg_data = get_brain_args(mode='eval', data_type='default', cond=False)
     if name_exp == 'fast':
@@ -380,8 +389,10 @@ def get_data_loaders(name_exp, input, overlap):
         
     exp_loader_dict = dict()
     for key in keys:
-        #arg_data['common_args']['batch_size'] = 32 #delete
-        exp_loader_dict[key] = get_brain_dataset_eval(**arg_data['common_args'], **eval_loader_args[key], input=input, overlap=overlap)
+        # print('batch_size')
+        # arg_data['common_args']['batch_size'] = 16 #delete
+        # print(arg_data['common_args']['batch_size'])
+        exp_loader_dict[key] = get_brain_dataset_eval(**arg_data['common_args'], **eval_loader_args[key], input=input, overlap=overlap, split_pts=split_pts)
     
     return exp_loader_dict
 
@@ -394,12 +405,12 @@ kwargs_eval = {
 
 ##################### End SET PARAMETERS ############################
 
-def main(path, version='results_plot_0', name_exp='fast'):
+def main(path, version='results_plot_0', name_exp='fast', split_pts = 0):
     pixel_dicts = {}
     sample_dicts = {}
     for model_dict in model_dicts:
         # print (model_dict
-        pixel_dict, sample_dict, model_name = eval_encoder_model(path=path, version=version, name_exp=name_exp, **model_dict)
+        pixel_dict, sample_dict, model_name = eval_encoder_model(path=path, version=version, name_exp=name_exp, split_pts=split_pts, **model_dict)
         pixel_dicts[model_name] = pixel_dict
         sample_dicts[model_name] = sample_dict
     with open(os.path.join(path, version, f"version_pixel_{name_exp}.yaml"), 'w') as file:
@@ -449,4 +460,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
     path = args.path 
     name_exp = args.name_exp
-    main(path, version=version, name_exp=name_exp)
+    split_pts = args.split_patients
+    main(path, version=version, name_exp=name_exp, split_pts=split_pts)

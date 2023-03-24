@@ -57,17 +57,17 @@ def helper_score(out_dict, key, val, patient_names, aggregate=False):
         else:
             score_names_sample_dict[key_n].append(value_n)
 
-    print(score_names_sample_dict)
-    print(score_names_sample_dict.values())
-    print(score_names_sample_dict.keys())
-    print(score_names_sample_dict.items())
+    # print(score_names_sample_dict)
+    # print(score_names_sample_dict.values())
+    # print(score_names_sample_dict.keys())
+    # print(score_names_sample_dict.items())
 
     dataframe1 = pd.DataFrame(dict([(k, pd.Series(v)) for k, v in score_names_sample_dict.items()]))
-    print(dataframe1)
+    #print(dataframe1)
 
-    for k in score_names_sample_dict:
-        print(k)
-        print(score_names_sample_dict[k])
+    # for k in score_names_sample_dict:
+    #     print(k)
+    #     print(score_names_sample_dict[k])
 
     avg_score_names_sample_dict = {k: sum(score_names_sample_dict[k]) / len(score_names_sample_dict[k]) for k in
                                    score_names_sample_dict}
@@ -75,7 +75,7 @@ def helper_score(out_dict, key, val, patient_names, aggregate=False):
     if aggregate:
         val = np.array(list(avg_score_names_sample_dict.values()))
 
-    print('val',val)
+    #print('val',val)
 
     return avg_score_names_sample_dict, val
 
