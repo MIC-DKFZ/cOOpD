@@ -62,7 +62,7 @@ $ pip install -r requirements.txt
 ```
 
 
-### Running with new datasets
+### Pre-processing
 
 Follow the instructions [here]([README_preprocessing.md](pre-process%2FREADME_preprocessing.md))
 
