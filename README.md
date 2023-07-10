@@ -64,7 +64,7 @@ $ pip install -r requirements.txt
 
 **Pre-processing**
 
-Follow the instructions [here]([README_preprocessing.md](pre-process%2FREADME_preprocessing.md))
+Follow the instructions [[here]([README_preprocessing.md](pre-process%2FREADME_preprocessing.md))]
 
 
 Set all the paths to the data and logs in: 
