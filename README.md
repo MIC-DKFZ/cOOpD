@@ -71,7 +71,7 @@ Set all the paths to the data and logs in:
 - config/global_config
 - config/datasets/brain.py
 - create own datamodule carrying your data 
-  - see --> datamodules/brain_module.py \& atamodules/brain.py
+  - see --> datamodules/brain_module.py \& datamodules/brain.py
 
 Verify that everything is working
 ```
