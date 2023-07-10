@@ -8,7 +8,7 @@ For the trachea and aorta, use pre-trained nnU-Net Task_055_SegTHOR.
 
 `registration.py`
 
-**Step 3: Intensity normalization, **
+**Step 3: Intensity normalization**
 
 (i) Intensity normalization of each 3D volume, using aorta and trachea mean intensities for normalization
 
