@@ -13,6 +13,7 @@
   - [Features](#features)
   - [Setup](#setup)
     - [Pre-processing](#pre-processing)
+    - [Steps](#steps)
     - [Running with new datasets](#running-with-new-datasets)
     - [Changing the generative models on the latent space](#changing-the-generative-models-on-the-latent-space)
   - [Usage](#usage)
@@ -66,6 +67,7 @@ $ pip install -r requirements.txt
 
 Follow the instructions [here]([README_preprocessing.md](pre-process%2FREADME_preprocessing.md))
 
+### Steps
 
 Set all the paths to the data and logs in: 
 - config/global_config
