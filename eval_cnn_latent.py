@@ -16,7 +16,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 import shutil
 from torch.utils.tensorboard import SummaryWriter
-import SimpleITK as sitk
+#import SimpleITK as sitk
 from latent_gen.cnn_aftercradl import COPDDataloader_eval, off_aug, activate_off_aug, COPDDataloader_unbalanced, ResNet_Encoder, ResNet18, ResNet34, ResNet50, get_train_transform_cnn, OnlyLinear, LeNet3D, Small_LeNet, Fully_Connected
 from models import base
 import torch.nn as nn

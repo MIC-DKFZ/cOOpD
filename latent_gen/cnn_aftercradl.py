@@ -1,7 +1,7 @@
 import os
 import numpy as np
 import math
-import SimpleITK as sitk
+#import SimpleITK as sitk
 from batchgenerators.dataloading.data_loader import DataLoader
 import torch
 import torch.nn as nn

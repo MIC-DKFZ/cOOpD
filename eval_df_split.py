@@ -9,8 +9,8 @@ from metrics.binary_score import get_metrics
 
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet34/default/17664630')
-parser.add_argument('-f', '--folder_eval', type=str, default='res_testset_3')
+parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/nnclr-resnet34/default/20033104')
+parser.add_argument('-f', '--folder_eval', type=str, default='eval_split')
 parser.add_argument('--name_exp', type=str, default='full')
 parser.add_argument('-s', '--split_patients', type=int, default= 1)
 
@@ -19,10 +19,13 @@ parser.add_argument('-s', '--split_patients', type=int, default= 1)
 def eval_encoder_split(path, version, folder_eval, Model_cls, model_kwargs={'n_components':1}):
     out_dict = dict()
     key = 'nll'
-    global_path = os.path.join(path, version, 'GMM 2 Comp')#Model_cls.name)
-    df_1 = pd.read_csv(os.path.join(global_path, folder_eval, folder_eval + '_AQ', 'lung_val', 'all_info.csv'), index_col=0)
-    df_2 = pd.read_csv(os.path.join(global_path, folder_eval, folder_eval + '_RZ', 'lung_val', 'all_info.csv'), index_col=0)
+    global_path = os.path.join(path, version, 'INN')#Model_cls.name)
+    df_1 = pd.read_csv(os.path.join(global_path, folder_eval + '1', 'lung_val', 'all_info.csv'), index_col=0)
+    df_2 = pd.read_csv(os.path.join(global_path, folder_eval + '2', 'lung_val', 'all_info.csv'), index_col=0)
+    df_3 = pd.read_csv(os.path.join(global_path, folder_eval + '3', 'lung_val', 'all_info.csv'), index_col=0)
+
     df = pd.concat([df_1, df_2], axis=0)
+    df = pd.concat([df, df_3], axis=0)
 
 
     df['label'] = df['label'].map(lambda x: x.lstrip('[').rstrip(']'))
@@ -51,8 +54,8 @@ def eval_encoder_split(path, version, folder_eval, Model_cls, model_kwargs={'n_c
     out_dict[key + 'SumP95'] = get_metrics(val_SumP95, labels)
     out_dict[key + 'SumP99'] = get_metrics(val_SumP99, labels)
 
-    df.to_csv(os.path.join(global_path, folder_eval, 'lung_val', 'all_info.csv'))
-    with open(os.path.join(global_path, folder_eval, 'sample_full.yaml'), 'w+') as file:
+    df.to_csv(os.path.join(global_path, 'lung_val', 'all_info.csv'))
+    with open(os.path.join(global_path, 'sample_full.yaml'), 'w+') as file:
         yaml.dump(out_dict, file)
 
 

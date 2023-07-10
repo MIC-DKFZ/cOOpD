@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torchvision.models as models
 import torch.nn.functional as F
-import SimpleITK as sitk
+#import SimpleITK as sitk
 
 class CNN3D(nn.Module):
     def __init__(self, in_channels, out_channels, num_feat, bias=True, num_layers=4):
@@ -168,6 +168,60 @@ def get_encoder(in_channels, out_channels, num_feat, num_layers=4,bias=True):
         return DC_Encoder(in_channels, out_channels, num_feat,bias=bias)
     else:
         return Encoder(in_channels, out_channels, num_feat, num_layers=num_layers,bias=bias)
+
+def _prediction_mlp(in_dims: int,
+                    h_dims: int,
+                    out_dims: int) -> nn.Sequential:
+    """Prediction MLP. The original paper's implementation has 2 layers, with
+    BN applied to its hidden fc layers but no BN or ReLU on the output fc layer.
+    Note that the hidden dimensions should be smaller than the input/output
+    dimensions (bottleneck structure). The default implementation using a
+    ResNet50 backbone has an input dimension of 2048, hidden dimension of 512,
+    and output dimension of 2048
+    Args:
+        in_dims:
+            Input dimension of the first linear layer.
+        h_dims:
+            Hidden dimension of all the fully connected layers (should be a
+            bottleneck!)
+        out_dims:
+            Output Dimension of the final linear layer.
+    Returns:
+        nn.Sequential:
+            The projection head.
+    """
+    l1 = nn.Sequential(nn.Linear(in_dims, h_dims),
+                       nn.BatchNorm1d(h_dims),
+                       nn.ReLU(inplace=True))
+
+    l2 = nn.Linear(h_dims, out_dims)
+
+    prediction = nn.Sequential(l1, l2)
+    return prediction
+
+def _get_nnclr_projection_head(num_ftrs: int, h_dims: int, out_dim: int, num_layers: int=3):
+    """Returns a 2-layer projection head.
+    """
+    l1 = nn.Sequential(nn.Linear(num_ftrs, h_dims),
+                       nn.BatchNorm1d(h_dims),
+                       nn.ReLU(inplace=True))
+
+    l2 = nn.Sequential(nn.Linear(h_dims, h_dims),
+                       nn.BatchNorm1d(h_dims),
+                       nn.ReLU(inplace=True))
+
+    l3 = nn.Sequential(nn.Linear(h_dims, out_dim),
+                       nn.BatchNorm1d(out_dim))
+
+    if num_layers == 3:
+        projection = nn.Sequential(l1, l2, l3)
+    elif num_layers == 2:
+        projection = nn.Sequential(l1, l3)
+    else:
+        raise NotImplementedError("Only MLPs with 2 and 3 layers are implemented.")
+
+    return projection
+
 
 class MLP(nn.Module):
     def __init__(self, dim_in, dim_out, hidden_dims=[20], non_lin = torch.nn.ReLU, bn=False): #20

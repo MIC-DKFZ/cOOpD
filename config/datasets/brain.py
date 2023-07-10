@@ -7,12 +7,12 @@ tmp_data_dir = None
 
 
 datasets_common_args = {
-        'batch_size': 64, #12 #64
+        'batch_size': 64, #64, #12 #32
         'patch_size': (1,30,30,30),
         'elastic_deform': False,
         'rnd_crop': True,
         'rotate': True,
-        'num_threads_in_multithreaded': 1,
+        'num_threads_in_multithreaded': 8,
         'double_headed': False,
         #'input': 'insp',
         #'step': 'pretext'
@@ -64,7 +64,7 @@ eval_val_ano_args = {
         'n_items': None,
         'do_reshuffle': False,
         'mode': 'val',
-        'num_processes': 4,
+        'num_processes': 8, #4 #CHANGE
         #'slice_offset': 10,
         #'label_slice': 2,
         #'tmp_dir': tmp_data_dir

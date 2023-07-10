@@ -5,7 +5,7 @@ import json
 from sklearn.utils import check_array, check_random_state
 from numpy.lib.stride_tricks import as_strided
 from itertools import product
-import SimpleITK as sitk
+#import SimpleITK as sitk
 
 def extract_patches(arr, patch_shape=8, extraction_step=1):
     """Extracts patches of any n-dimensional array in place using strides.
@@ -191,7 +191,7 @@ def extract_patches_3d_fromMask(volume, mask, patch_size, max_patches = None, ra
 
     print('patch_final', patches[0,0,0,0,0], patches.shape)
 
-    sitk.WriteImage(sitk.GetImageFromArray(patches[0,0,:,:,:]), '/home/silvia/Downloads/try.nii.gz')
+    #sitk.WriteImage(sitk.GetImageFromArray(patches[0,0,:,:,:]), '/home/silvia/Downloads/try.nii.gz')
 
 
     return patches
@@ -486,14 +486,14 @@ if __name__ == "__main__":
     insp = numpy_array['insp']
     label = numpy_array['label']
     patches, index = new_fromMask(insp, label, (1, 50, 50, 50), overlap=(0, 0, 0, 0))
-    sitk.WriteImage(sitk.GetImageFromArray(patches[0][0, :, :, :]), '/home/silvia/Downloads/try_0.nii.gz')
-    sitk.WriteImage(sitk.GetImageFromArray(patches[1][0, :, :, :]), '/home/silvia/Downloads/try_1.nii.gz')
-    sitk.WriteImage(sitk.GetImageFromArray(patches[2][0, :, :, :]), '/home/silvia/Downloads/try_2.nii.gz')
-    sitk.WriteImage(sitk.GetImageFromArray(patches[3][0, :, :, :]), '/home/silvia/Downloads/try_3.nii.gz')
-    sitk.WriteImage(sitk.GetImageFromArray(patches[4][0, :, :, :]), '/home/silvia/Downloads/try_4.nii.gz')
-    sitk.WriteImage(sitk.GetImageFromArray(patches[5][0, :, :, :]), '/home/silvia/Downloads/try_5.nii.gz')
-    sitk.WriteImage(sitk.GetImageFromArray(patches[6][0, :, :, :]), '/home/silvia/Downloads/try_6.nii.gz')
-    sitk.WriteImage(sitk.GetImageFromArray(patches[7][0, :, :, :]), '/home/silvia/Downloads/try_7.nii.gz')
+    # sitk.WriteImage(sitk.GetImageFromArray(patches[0][0, :, :, :]), '/home/silvia/Downloads/try_0.nii.gz')
+    # sitk.WriteImage(sitk.GetImageFromArray(patches[1][0, :, :, :]), '/home/silvia/Downloads/try_1.nii.gz')
+    # sitk.WriteImage(sitk.GetImageFromArray(patches[2][0, :, :, :]), '/home/silvia/Downloads/try_2.nii.gz')
+    # sitk.WriteImage(sitk.GetImageFromArray(patches[3][0, :, :, :]), '/home/silvia/Downloads/try_3.nii.gz')
+    # sitk.WriteImage(sitk.GetImageFromArray(patches[4][0, :, :, :]), '/home/silvia/Downloads/try_4.nii.gz')
+    # sitk.WriteImage(sitk.GetImageFromArray(patches[5][0, :, :, :]), '/home/silvia/Downloads/try_5.nii.gz')
+    # sitk.WriteImage(sitk.GetImageFromArray(patches[6][0, :, :, :]), '/home/silvia/Downloads/try_6.nii.gz')
+    # sitk.WriteImage(sitk.GetImageFromArray(patches[7][0, :, :, :]), '/home/silvia/Downloads/try_7.nii.gz')
 
 
 

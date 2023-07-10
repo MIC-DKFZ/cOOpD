@@ -11,9 +11,12 @@ from models import base
 
 
 from algo.base_algo.simclr import SimCLR_base
+from algo.base_algo.nnclr import NNCLR_base
+from algo.base_algo.nnclr_ContextAware import NNCLR_ContextAware
+
 from algo.utils import get_seg_im_gt, process_batch
 from config.paths import trainer_defaults
-from pytorch_lightning.utilities import argparse_utils
+# from pytorch_lightning.utilities import argparse_utils
 from sklearn import preprocessing
 
 
@@ -188,10 +191,11 @@ def get_label_latent_forCNN(experiment, dataloader, get_slice=False, to_npy=Fals
     return out_dict
 
 
-def get_args(DataModule:pl.LightningDataModule, default_experiment='simclr' ,arguments=None):
+def get_args(DataModule:pl.LightningDataModule, default_experiment='nnclr', arguments=None): #simclr
     """Helper to obtain the arguments for the features training
 
     Args:
+        default_experiment:
         DataModule (pl.LightningDataModule): [description]
 
     Raises:
@@ -201,7 +205,8 @@ def get_args(DataModule:pl.LightningDataModule, default_experiment='simclr' ,arg
         [Namespace]: Arguments
     """
     parser = ArgumentParser(add_help=False)
-    parser.add_argument('--experiment', default=default_experiment, type=str)
+    #parser.add_argument('--experiment', default=default_experiment, type=str)
+    parser.add_argument('--experiment', default = 'simclr', type = str, choices = ['simclr', 'nnclr'])
     parser = DataModule.add_data_specific_args(parser)
 
     args_temp = parser.parse_known_args()[0]
@@ -209,6 +214,9 @@ def get_args(DataModule:pl.LightningDataModule, default_experiment='simclr' ,arg
 
     if args_temp.experiment == 'simclr':
         Experiment = SimCLR_base
+
+    elif args_temp.experiment == 'nnclr':
+        Experiment = NNCLR_base #NNCLR_ContextAware
     
     
     else:
@@ -277,7 +285,7 @@ def get_decoder(args, num_layers:int = 0, final=torch.nn.Sigmoid):
 def get_experiment(args, num_layers:int = 5): #2
 
 
-    if args.experiment in ['simclr']:
+    if args.experiment in ['simclr', 'nnclr']:
         if args.model_type[:6] == 'CNN3D':
             model = base.CNN3D(in_channels=args.input_shape[0], out_channels=args.z_dim, num_feat=args.num_ft, bias=True, num_layers=num_layers)
         elif args.model_type[:6] == 'resnet':
@@ -306,6 +314,8 @@ def get_experiment(args, num_layers:int = 5): #2
     # Initialize Experiment
     if args.experiment in ['simclr', 'binary']:
         experiment = SimCLR_base(hparams=args, model=model, **vars(args))
+    elif args.experiment in ['nnclr']:
+        experiment = NNCLR_base(hparams=args, model=model, **vars(args)) #NNCLR_ContextAware
 
     return experiment
 

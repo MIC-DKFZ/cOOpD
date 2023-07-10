@@ -267,13 +267,14 @@ def select_max_patches(data_list, max_patches):
 def get_brain_dataset(base_dir,  mode="train", batch_size=64, n_items=None, pin_memory=False,
                       num_processes=8, drop_last=False, do_reshuffle=True, step='pretext', realworld_dataset = False,
                       patch_size=(50,50,50), elastic_deform = True, rnd_crop = True, rotate = True,
-                      num_threads_in_multithreaded = 1, base_train = 'default',  double_headed=False, target_size = (1,50,50,50), input = 'insp', overlap='20', kfold=1, max_patches=None
+                      num_threads_in_multithreaded = 1, base_train = 'default',  double_headed=False,
+                      target_size = (1,50,50,50), input = 'insp', overlap='20', kfold=1, max_patches=None, split_pts=0
                       ):
     print(overlap)
     print(base_dir)
     if step=='train_cnn_latent':
-        patches_train = get_list_of_patients(data_folder=base_dir, step='train_cnn_latent', overlap=overlap, kfold = kfold, max_patches=max_patches, realworld_dataset=realworld_dataset)
-        patches_val = get_list_of_patients(data_folder=base_dir, step='eval', overlap=overlap, kfold = kfold, max_patches=max_patches, realworld_dataset=realworld_dataset)
+        patches_train = get_list_of_patients(data_folder=base_dir, step='train_cnn_latent', overlap=overlap, kfold = kfold, max_patches=max_patches, realworld_dataset=realworld_dataset, split_pts=split_pts)
+        patches_val = get_list_of_patients(data_folder=base_dir, step='eval', overlap=overlap, kfold = kfold, max_patches=max_patches, realworld_dataset=realworld_dataset, split_pts=split_pts)
 
         patients_train = np.unique([i.split('_')[0] for i in patches_train])
         patients_val = np.unique([i.split('_')[0] for i in patches_val])
@@ -289,7 +290,7 @@ def get_brain_dataset(base_dir,  mode="train", batch_size=64, n_items=None, pin_
 
 
     else:
-        patches = get_list_of_patients(data_folder= base_dir, step=step, overlap=overlap, kfold=kfold, max_patches=max_patches, realworld_dataset=realworld_dataset)
+        patches = get_list_of_patients(data_folder= base_dir, step=step, overlap=overlap, kfold=kfold, max_patches=max_patches, realworld_dataset=realworld_dataset, split_pts=split_pts)
         patients = np.unique([i.replace('_' + i.split('_')[-1], '') for i in patches]) #np.unique([i.split('_')[0] for i in patches])
         train_pat, val_pat = get_split_deterministic(patients, fold=0, num_splits=5, random_state=12345)
         train = [i for i in patches if i.replace('_' + i.split('_')[-1], '') in train_pat]
@@ -399,7 +400,7 @@ def get_brain_dataset_eval(base_dir,  mode="train", batch_size=64, n_items=None,
                       ):
 
     patients = get_list_of_patients(data_folder= base_dir, step=step, overlap=overlap, kfold=kfold, max_patches=max_patches,
-                                    realworld_dataset=realworld_dataset, split_pts=split_pts)#[0:3000] #delete
+                                    realworld_dataset=realworld_dataset, split_pts=split_pts)#[0:900000] #delete
     patients_unique = np.unique(
         [i.replace('_' + i.split('_')[-1], '') for i in patients])  # np.unique([i.split('_')[0] for i in patches])
     print('eval patients', len(patients_unique))
@@ -516,7 +517,7 @@ def get_list_of_patients(data_folder, step, overlap: str, kfold: int, max_patche
         with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_GMM.txt'), "r") as fp:
             list_filenames = json.load(fp)
     elif step == 'eval':
-        with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_testset.txt'), "r") as fp: #eval
+        with open(os.path.join(data_folder[0], 'overlap' + overlap, 'fold' + str(kfold), 'patches_for_eval.txt'), "r") as fp: #testset
             list_filenames = json.load(fp)
             #weird = ['COPDGene_H49499', 'COPDGene_J39233', 'COPDGene_Q66767']
             #weird = ['COPDGene_H49499', 'COPDGene_Q66767', 'COPDGene_Q65769', 'COPDGene_Q61117', 'COPDGene_Q82856']
@@ -532,13 +533,18 @@ def get_list_of_patients(data_folder, step, overlap: str, kfold: int, max_patche
             if split_pts==1:
 
                 weird = ['COPDGene_A', 'COPDGene_B', 'COPDGene_C', 'COPDGene_D', 'COPDGene_E', 'COPDGene_F', 'COPDGene_G',
-                     'COPDGene_H', 'COPDGene_I', 'COPDGene_J', 'COPDGene_K', 'COPDGene_L', 'COPDGene_M', 'COPDGene_O',
-                     'COPDGene_P', 'COPDGene_Q']
+                     'COPDGene_H']
                 list_filenames = [x for x in list_filenames if x.split('_')[0] + '_' + x.split('_')[1][0] in weird]
 
             elif split_pts==2:
 
-                weird = ['COPDGene_N', 'COPDGene_R', 'COPDGene_S', 'COPDGene_T', 'COPDGene_U', 'COPDGene_V', 'COPDGene_W',
+                weird = ['COPDGene_I', 'COPDGene_J', 'COPDGene_K', 'COPDGene_L', 'COPDGene_M', 'COPDGene_N', 'COPDGene_O',
+                     'COPDGene_P']
+                list_filenames = [x for x in list_filenames if x.split('_')[0] + '_' + x.split('_')[1][0] in weird]
+
+            elif split_pts==3:
+
+                weird = ['COPDGene_Q', 'COPDGene_R', 'COPDGene_S', 'COPDGene_T', 'COPDGene_U', 'COPDGene_V', 'COPDGene_W',
                      'COPDGene_Y', 'COPDGene_X', 'COPDGene_Z']
                 list_filenames = [x for x in list_filenames if x.split('_')[0] + '_' + x.split('_')[1][0] in weird]
 

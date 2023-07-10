@@ -146,5 +146,7 @@ class BrainDataModule(pl.LightningDataModule):
         parser.add_argument("--base_train", default='models_genesis', type=str, choices=['default', 'models_genesis'])
         parser.add_argument("--step", default='pretext', type=str, choices=['pretext', 'fitting_GMM', 'eval', 'test'])
         parser.add_argument("--realworld_dataset", default=False, type=bool)
+        parser.add_argument("--default_experiment", default='simclr', type=str, choices=['simclr', 'nnclr'])
+
         return parser
         

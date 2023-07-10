@@ -27,9 +27,9 @@ import csv
 from sys import getsizeof
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet34/default/17674151')
+parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/nnclr-resnet34/default/19967764/')
 parser.add_argument('--name_exp', type=str, default='full')
-parser.add_argument('-s', '--split_patients', type=int, default= 0)
+parser.add_argument('-s', '--split_patients', type=int, default= 1)
 
 
 
@@ -57,32 +57,32 @@ def evaluate_ano_loader(ano_algo, dataloader, kwargs_pix=dict(), kwargs_sample=d
 
     if is_cluster() is False:
         dataloader = tqdm(dataloader)
-    try:
-        for i, batch in enumerate(dataloader):
-            #batch['labels'], batch['seg'] = get_seg_im_gt(batch)
+    #try:
+    for i, batch in enumerate(dataloader):
+        #batch['labels'], batch['seg'] = get_seg_im_gt(batch)
 
-            batch_dict.insert(batch)
+        batch_dict.insert(batch)
 
-            # x = batch['data']
-            # x = x.to(ano_algo.device)
+        # x = batch['data']
+        # x = x.to(ano_algo.device)
 
-            # print(batch['patient_name'])
-            # print(batch['patient_num'])
+        # print(batch['patient_name'])
+        # print(batch['patient_num'])
 
-            if 'sample' in scoring:
-                #score_sample = ano_algo.score_samples(batch, **kwargs_sample)
-                #score_sample_dict.insert(score_sample)
-                score_sample_dict.insert(ano_algo.score_samples(batch, **kwargs_sample))
-
-
-            # if 'pixel' in scoring:
-            #     score_pix = ano_algo.score_pixels(batch, **kwargs_pix)
-            #     score_pixel_dict.insert(score_pix)
+        if 'sample' in scoring:
+            #score_sample = ano_algo.score_samples(batch, **kwargs_sample)
+            #score_sample_dict.insert(score_sample)
+            score_sample_dict.insert(ano_algo.score_samples(batch, **kwargs_sample))
 
 
-    except RuntimeError:
-        print('RunTimeError fail')
-        #print(batch)
+        # if 'pixel' in scoring:
+        #     score_pix = ano_algo.score_pixels(batch, **kwargs_pix)
+        #     score_pixel_dict.insert(score_pix)
+
+
+    #except RuntimeError:
+    #print('RunTimeError fail')
+    #print(batch)
 
     ano_algo.zero_grad()
     torch.cuda.empty_cache()
@@ -390,7 +390,7 @@ def get_data_loaders(name_exp, input, overlap, split_pts):
     exp_loader_dict = dict()
     for key in keys:
         # print('batch_size')
-        # arg_data['common_args']['batch_size'] = 16 #delete
+        arg_data['common_args']['batch_size'] = 8 #delete
         # print(arg_data['common_args']['batch_size'])
         exp_loader_dict[key] = get_brain_dataset_eval(**arg_data['common_args'], **eval_loader_args[key], input=input, overlap=overlap, split_pts=split_pts)
     

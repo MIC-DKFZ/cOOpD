@@ -10,10 +10,10 @@ from algo.model import load_best_model, get_label_latent
 from config.latent_model import filename, model_dicts, tmp, suffix, rel_save
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet34/default/17664630') #'/home/silvia/Documents/CRADL/logs_cradl/cosyconet/pretext/brain/simclr-VGG16/default/11411061'
+parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/nnclr-resnet18/default/19967634') #'/home/silvia/Documents/CRADL/logs_cradl/cosyconet/pretext/brain/simclr-VGG16/default/11411061'
 parser.add_argument('--num_epoch', type=int, default=1)
 parser.add_argument('--resave', type=str2bool, nargs='?', const=False, default=False)
-parser.add_argument("--input", default='insp_exp_reg', type=str,
+parser.add_argument("--input", default='insp', type=str,
                     choices=['insp', 'insp_exp_reg', 'insp_jacobian', 'jacobian'])
 
 

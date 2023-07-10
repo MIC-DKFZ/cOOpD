@@ -59,7 +59,7 @@ class SimCLR_base(pl.LightningModule):
 
         except ImportError:
             view_batch = None
-        import SimpleITK as sitk
+        #import SimpleITK as sitk
         (x_a, x_b), y = process_batch(batch)
         # print('shapes',x_a.shape)
         # print(x_b.shape, y)
