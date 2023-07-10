@@ -12,11 +12,11 @@
   - [Technologies Used](#technologies-used)
   - [Features](#features)
   - [Setup](#setup)
+    - [Pre-processing](#pre-processing)
     - [Running with new datasets](#running-with-new-datasets)
     - [Changing the generative models on the latent space](#changing-the-generative-models-on-the-latent-space)
   - [Usage](#usage)
   - [Project Status](#project-status)
-  - [Room for Improvement](#room-for-improvement)
   - [Acknowledgements](#acknowledgements)
   - [License](#license)
 
@@ -62,7 +62,7 @@ $ pip install -r requirements.txt
 ```
 
 
-**Pre-processing**
+### Running with new datasets
 
 Follow the instructions [here]([README_preprocessing.md](pre-process%2FREADME_preprocessing.md))
 
