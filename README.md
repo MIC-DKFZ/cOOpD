@@ -22,7 +22,7 @@
 
 
 ## General Information
-Official PyTorch implementation for paper _cOOpD: Reformulating COPD classification on chest CT scans as anomaly detection using contrastive representations_
+Official PyTorch implementation for paper **_cOOpD: Reformulating COPD classification on chest CT scans as anomaly detection using contrastive representations_**
 , accepted in MICCAI 2023.
 Paper linked here soon.
 ![pipeline.png](pipeline.png)
