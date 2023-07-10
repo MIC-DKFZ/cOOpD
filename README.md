@@ -25,8 +25,8 @@
 Official PyTorch implementation for paper _cOOpD: Reformulating COPD classification on chest CT scans as anomaly detection using contrastive representations_
 , accepted in MICCAI 2023.
 Paper linked here soon.
-![pipeline.png](figs%2Fpipeline.png)
-![pipeline_legend.png](figs%2Fpipeline_legend.png)
+![pipeline.png](pipeline.png)
+![pipeline_legend.png](pipeline_legend.png)
 
 
 ## Abstract
