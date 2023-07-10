@@ -4,6 +4,8 @@
 >
 > Official Code Repository Going alongside the Paper
 
+Please cite the following work if you find this model useful for your research:
+#TODO
 
 ## Table of Contents
 - [cOOpD](#cradl)
@@ -115,3 +117,4 @@ Project is _in progress_
 CRADL: Contrastive Representations for Unsupervised Anomaly Detection and Localization [[link]](https://arxiv.org/abs/2301.02126) 
 
 ## License 
+Copyright © German Cancer Research Center (DKFZ), [Division of Medical Image Computing (MIC)](https://www.dkfz.de/en/mic/index.php). Please make sure that your usage of this code is in compliance with the [code license]([LICENSE](LICENSE)).
