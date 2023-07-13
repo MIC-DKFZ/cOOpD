@@ -3,7 +3,7 @@
 
 For the trachea and aorta, use pre-trained nnU-Net Task_055_SegTHOR.
 
-**Step 2: Setup your paths
+**Step 2: Setup your paths**
 
 Set all the paths to the data: 
 - pre-process/paths.py
