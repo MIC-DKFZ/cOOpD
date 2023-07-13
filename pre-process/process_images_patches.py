@@ -462,7 +462,7 @@ if __name__ == "__main__":
             directories_insp_lobe = sorted(directories_insp_lobe)
         print(directories_insp_lobe)
 
-        for insp in range(5000, len(directories_insp)):  # len(directories_insp)
+        for insp in range(0, len(directories_insp)):  # len(directories_insp)
             # if os.path.basename(directories_insp[insp]) == "003258511.nii.gz":
             for label in range(0, len(directories_label)):
                 if os.path.basename(directories_insp[insp]) == os.path.basename(directories_label[label]):
@@ -516,7 +516,7 @@ if __name__ == "__main__":
         # files_exist = os.listdir(os.path.join(glob_conf_copdgene['to_save'] + str(int(overlap_size*100))))
         # files_exist = list(set([x.split('_')[0] + '_' + x.split('_')[1] for x in files_exist]))
 
-        for insp in range(825, len(directories_insp)):  # len(directories_insp)
+        for insp in range(0, len(directories_insp)):  # len(directories_insp)
             # if os.path.basename(directories_insp[insp]) == "003258511.nii.gz":
             for label in range(0, len(directories_label)):
                 if os.path.basename(directories_insp[insp]) == os.path.basename(directories_label[label]):

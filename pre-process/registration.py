@@ -5,6 +5,9 @@ import sys
 import glob2
 import pandas as pd
 from parametermap_config import parameter_file
+from paths import glob_conf_cosyconet, glob_conf_copdgene
+
+
 print(sitk.Version())
 def register(fixed, moving, save_path):
     af, b1, b2, p_ab1, p_ab1b2 = parameter_file()
@@ -31,11 +34,11 @@ if __name__ == '__main__':
     directories_ExpReg = []
     directories_mask_insp = []
 
-    path_insp = '/images/Insp'
-    path_exp = '/images/Exp'
-    path_ExptoInsp_reg = '/images/ExpReg'
-    path_lung = '/masks_nii/lung'
-    path_lobe = '/masks_nii/lung_lobe'
+    path_insp = glob_conf_cosyconet['insp_path']
+    path_exp = glob_conf_copdgene['exp_path']
+    path_ExptoInsp_reg = glob_conf_copdgene['reg_path']
+    path_lung = glob_conf_copdgene['insp_lobes']
+    path_lobe = glob_conf_copdgene['lung_seg_path']
 
     for lung_exp in glob2.glob(os.path.join(path_exp, '*.nii.gz')):
         directories_exp.append(lung_exp)
