@@ -9,7 +9,7 @@ import torch
 import matplotlib.pyplot as plt 
 
 from algo.utils import get_seg_im_gt, process_batch
-from pyutils.plots import visualize_brain_data, visualize_brain_seg_data
+from pyutils.plots import visualize_lung_data, visualize_lung_seg_data
 
 import seaborn as sns 
 context='paper'
@@ -34,7 +34,7 @@ def visualize_segmentations(batch_dict, score_sample_dict, score_pixel_dict, pat
         for cb in [True, False]:
             use_ind=None
             if 'nll' in score_sample_dict.keys():
-                f, a = visualize_brain_data(score_pixel_dict, visualize=key, cb=cb, indices=use_ind, title=None, title_dict=batch_dict)
+                f, a = visualize_lung_data(score_pixel_dict, visualize=key, cb=cb, indices=use_ind, title=None, title_dict=batch_dict)
                 f.set_size_inches(12,12)
                 print("vis_nll")
             prefix = ''
@@ -309,7 +309,7 @@ def visualize_gt(path, batch_dict, name):
     """
     use_ind = None
     
-    f,a = visualize_brain_seg_data(batch_dict, indices=use_ind)
+    f,a = visualize_lung_seg_data(batch_dict, indices=use_ind)
     f.set_size_inches(12,12)
     plt.savefig(os.path.join(path, 'GT {}.png'.format(name)))
     plt.close(fig='all')

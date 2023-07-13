@@ -5,12 +5,12 @@ import numpy as np
 
 from pyutils.parser import str2bool
 from latent_gen.ood_model import Abstract_OOD
-from datamodules.brain_module import BrainDataModule
+from datamodules.lung_module import LungDataModule
 from algo.model import load_best_model, get_label_latent
 from config.latent_model import filename, model_dicts, tmp, suffix, rel_save
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/nnclr-resnet18/default/19967634') #'/home/silvia/Documents/CRADL/logs_cradl/cosyconet/pretext/brain/simclr-VGG16/default/11411061'
+parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/lung/nnclr-resnet18/default/19967634') #'/home/silvia/Documents/CRADL/logs_cradl/cosyconet/pretext/lung/simclr-VGG16/default/11411061'
 parser.add_argument('--num_epoch', type=int, default=1)
 parser.add_argument('--resave', type=str2bool, nargs='?', const=False, default=False)
 parser.add_argument("--input", default='insp', type=str,
@@ -48,7 +48,7 @@ def save_outputs(path, resave=False, num_epoch=1, get_slice_idx=True, input='ins
         mode='fit'
         if num_epoch != 1:
             mode = 'train'
-        datamodule = BrainDataModule(mode=mode, batch_size=8, step = 'fitting_GMM', input=input, overlap=overlap) #batch_size=64
+        datamodule = LungDataModule(mode=mode, batch_size=8, step = 'fitting_GMM', input=input, overlap=overlap) #batch_size=64
 
         #loader_dict = {'train': datamodule.train_dataloader(), 'val':datamodule.val_dataloader()}
         train_loader, val_loader = datamodule.train_dataloader()

@@ -5,9 +5,9 @@ import pytorch_lightning as pl
 
 from algo.model import get_args, get_experiment
 from config.paths import glob_conf
-from datamodules.brain_module import BrainDataModule
+from datamodules.lung_module import LungDataModule
 from pytorch_lightning.loggers import tensorboard
-## To exchange Datasets - Exchange BrainDataModule for another PL Datamodule
+## To exchange Datasets - Exchange LungDataModule for another PL Datamodule
 
 
 def main(args):
@@ -42,7 +42,7 @@ def main(args):
 
 
     # Initialize Data
-    dm = BrainDataModule(**vars(args))
+    dm = LungDataModule(**vars(args))
     dm.prepare_data()
     args.num_workers = dm.get_workers_for_current_node()
     print(args)
@@ -64,6 +64,6 @@ def main(args):
 
 
 if __name__ == "__main__":
-    args = get_args(BrainDataModule)
+    args = get_args(LungDataModule)
     path = main(args)
     print(path)

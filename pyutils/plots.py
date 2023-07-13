@@ -9,7 +9,7 @@ from numpy.lib.arraysetops import isin
 v_data = (-1.5, 1.5)
 v_seg = (0, 1)
 
-def visualize_brain_data(x:dict ,visualize:str='data', cb=True, indices=None, title=None, title_dict=None, function=None, cmap=None):
+def visualize_lung_data(x:dict ,visualize:str='data', cb=True, indices=None, title=None, title_dict=None, function=None, cmap=None):
 
     x_vis = np.copy(x[visualize])
     if function is not None:
@@ -75,7 +75,7 @@ def visualize_brain_data(x:dict ,visualize:str='data', cb=True, indices=None, ti
             fig.colorbar(im, cbar_ax, )
     return fig, axs
 
-def visualize_brain_seg_data(x:dict, indices=None):
+def visualize_lung_seg_data(x:dict, indices=None):
     newcmp = get_seg_cm()
 
     if indices is None:

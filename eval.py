@@ -9,9 +9,9 @@ import yaml
 from algo.ano_encoder.feature_likelihood import OOD_Encoder
 from algo.model import load_best_model
 from algo.utils import get_seg_im_gt
-from config.datasets.brain import get_brain_args
-from datamodules.brain_module import get_brain_dataset
-from datamodules.brain import get_brain_dataset_eval
+from config.datasets.lung import get_lung_args
+from datamodules.lung_module import get_lung_dataset
+from datamodules.lung import get_lung_dataset_eval
 from metrics.binary_score import get_metrics
 from pyutils.ano_algo import visualize_gt, visualize_segmentations, visualize_scores
 from pyutils.dictof import DictOf
@@ -27,7 +27,7 @@ import csv
 from sys import getsizeof
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/nnclr-resnet34/default/19967764/')
+parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/lung/nnclr-resnet34/default/19967764/')
 parser.add_argument('--name_exp', type=str, default='full')
 parser.add_argument('-s', '--split_patients', type=int, default= 1)
 
@@ -120,8 +120,8 @@ def get_pixel_metrics(batch_dict, score_pixel_dict):
     print("Mean Time for Metric Computation: {}".format(meantime))
     return out_dict
 
-def get_brain_metrics(batch_dict, score_pixel_dict):
-    """Computes metrics over the brain area
+def get_lung_metrics(batch_dict, score_pixel_dict):
+    """Computes metrics over the lung area
 
     Args:
         batch_dict ([type]): [description]
@@ -132,13 +132,13 @@ def get_brain_metrics(batch_dict, score_pixel_dict):
     """
     seg = batch_dict['seg']
     out_dict = dict()
-    brain_region = batch_dict['data']!=0
-    seg_ = seg[brain_region]
+    lung_region = batch_dict['data']!=0
+    seg_ = seg[lung_region]
     seg_ = np.reshape(seg_, -1)
     times=[time.time()]
     for key, val in score_pixel_dict.items():
         out_dict[key] = dict()
-        val_ = val[brain_region]
+        val_ = val[lung_region]
         val_ = np.reshape(val_, -1)
         assert seg_.shape == val_.shape
         out_dict[key] = get_metrics(val_, seg_)
@@ -378,8 +378,8 @@ def eval_ano_algo(ano_algo, model_path, loader_dict, scoring=['sample'],vis=Fals
 version= rel_save
 
 def get_data_loaders(name_exp, input, overlap, split_pts):
-    from config.datasets.brain import eval_loader_args
-    arg_data = get_brain_args(mode='eval', data_type='default', cond=False)
+    from config.datasets.lung import eval_loader_args
+    arg_data = get_lung_args(mode='eval', data_type='default', cond=False)
     if name_exp == 'fast':
         keys = ['hcp_syn_fast']
     elif name_exp == 'full':
@@ -392,7 +392,7 @@ def get_data_loaders(name_exp, input, overlap, split_pts):
         # print('batch_size')
         arg_data['common_args']['batch_size'] = 8 #delete
         # print(arg_data['common_args']['batch_size'])
-        exp_loader_dict[key] = get_brain_dataset_eval(**arg_data['common_args'], **eval_loader_args[key], input=input, overlap=overlap, split_pts=split_pts)
+        exp_loader_dict[key] = get_lung_dataset_eval(**arg_data['common_args'], **eval_loader_args[key], input=input, overlap=overlap, split_pts=split_pts)
     
     return exp_loader_dict
 

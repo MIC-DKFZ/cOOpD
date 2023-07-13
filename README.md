@@ -73,9 +73,9 @@ Follow the instructions [here]([README_preprocessing.md](pre-process%2FREADME_pr
 
 Set all the paths to the data and logs in: 
 - config/global_config
-- config/datasets/brain.py
+- config/datasets/lung.py
 - create own datamodule carrying your data 
-  - see --> datamodules/brain_module.py \& datamodules/brain.py
+  - see --> datamodules/lung_module.py \& datamodules/lung.py
 
 Verify that everything is working
 ```

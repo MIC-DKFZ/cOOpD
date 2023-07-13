@@ -6,7 +6,7 @@ from torch.optim.lr_scheduler import CosineAnnealingLR
 
 from pyutils.parser import str2bool
 from latent_gen.ood_model import Abstract_OOD
-from datamodules.brain_module import BrainDataModule
+from datamodules.lung_module import LungDataModule
 from algo.model import load_best_model, get_label_latent_forCNN
 from config.latent_model import filename, model_dicts, tmp, suffix, rel_save
 import torch
@@ -30,7 +30,7 @@ from sklearn.metrics import roc_auc_score, precision_recall_curve, auc, accuracy
 import pandas as pd
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/simclr-resnet34/default/17142285') #12085919')#simclr-VGG13/default/10920176')#simclr-VGG16/default/11007765')
+parser.add_argument('-p', '--path', type=str, default='/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/lung/simclr-resnet34/default/17142285') #12085919')#simclr-VGG13/default/10920176')#simclr-VGG16/default/11007765')
 parser.add_argument('--num_epoch', type=int, default=1)
 parser.add_argument('--resave', type=str2bool, nargs='?', const=False, default=False)
 parser.add_argument('--reconstruct', type=str2bool, nargs='?', const=False, default=False)
@@ -57,7 +57,7 @@ def save_outputs(path, resave=False, num_epoch=1, get_slice_idx=True, input='ins
         mode='fit'
         if num_epoch != 1:
             mode = 'train'
-        datamodule = BrainDataModule(mode=mode, batch_size=64, step = 'test', input=input, overlap = overlap, realworld_dataset=realworld_dataset) #attention_mech #fitting_GMM
+        datamodule = LungDataModule(mode=mode, batch_size=64, step = 'test', input=input, overlap = overlap, realworld_dataset=realworld_dataset) #attention_mech #fitting_GMM
 
         #loader_dict = {'train': datamodule.train_dataloader(), 'val':datamodule.val_dataloader()}
         test_loader = datamodule.test_dataloader()

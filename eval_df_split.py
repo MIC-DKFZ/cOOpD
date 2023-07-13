@@ -9,7 +9,7 @@ from metrics.binary_score import get_metrics
 
 
 parser = ArgumentParser()
-parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/brain/nnclr-resnet34/default/20033104')
+parser.add_argument('-p', '--path', type=str, default= '/home/silvia/Documents/CRADL/logs_cradl/copdgene/pretext/lung/nnclr-resnet34/default/20033104')
 parser.add_argument('-f', '--folder_eval', type=str, default='eval_split')
 parser.add_argument('--name_exp', type=str, default='full')
 parser.add_argument('-s', '--split_patients', type=int, default= 1)
