@@ -60,8 +60,7 @@ Contrastive Pretext Training on Medical Data
 ## Setup
 Set this up with conda:
 ```
-$ conda create -n cradl python=3.7
-$ pip install -r requirements.txt
+$ conda env create -f environment.yml
 ```
 
 
