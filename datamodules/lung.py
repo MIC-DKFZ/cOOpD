@@ -546,7 +546,7 @@ class LungDataLoader(AbstractAnomalyDataLoader):
         #print('img_idx',img_idx)
         #patch_num = full_path.split('/')[-1].split('.')[0].split('_')[1]
 
-        if 'copdgene' in self.base_dir[0]:
+        if 'COPDGene' in self.base_dir[0]:
             patient = 'SUBJECT_ID'
             fev_v = 'FEV1_post'
             fvc_v = 'FVC_post'
