@@ -69,7 +69,7 @@ $ conda env create -f environment.yml
 
 ### Pre-processing
 
-Follow the instructions [here]([README_preprocessing.md](pre-process/README_preprocessing.md))
+Follow the instructions [here](pre-process/README_preprocessing.md)
 
 ### Steps
 
