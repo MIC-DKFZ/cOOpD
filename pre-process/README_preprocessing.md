@@ -3,7 +3,7 @@
 
 For the trachea and aorta, use pre-trained nnU-Net Task_055_SegTHOR.
 
-Please also cite the following work if you use this pipeline for training:
+Please also cite the following work if you use this pipeline for inference:
 ```
 Isensee, F., Jaeger, P. F., Kohl, S. A., Petersen, J., & Maier-Hein, K. H. (2020). 
 nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation. Nature Methods, 1-9.

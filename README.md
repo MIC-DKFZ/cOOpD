@@ -47,8 +47,8 @@ terms of AUROC compared to the previous supervised state-of-the-art.
 Additionally, cOOpD yields well-interpretable spatial anomaly maps and
 patient-level scores which we show to be of additional value in identifying
 individuals in the early stage of progression. Experiments in artificially
-designed real-world prevalence settings further support that anomaly detection is a powerful way of tackling COPD classification. Code will be
-released upon acceptance.
+designed real-world prevalence settings further support that anomaly detection is a powerful way of tackling COPD classification. 
+
 ## Technologies Used
 - Python - version 3.7+
 - See environment.yml
