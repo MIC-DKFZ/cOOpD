@@ -5,7 +5,10 @@
 > Official Code Repository Going alongside the Paper
 
 Please cite the following work if you find this model useful for your research:
-#TODO
+```
+Silvia D. Almeida, Carsten T. Lüth, Tobias Norajitra, Tassilo Wald, Marco Nolden, Paul F. Jaeger, Claus P. Heussel, Jürgen Biederer, Oliver Weinheimer, Klaus Maier-Hein (2023). 
+cOOpD: Reformulating COPD classification on chest CT scans as anomaly detection using contrastive representations. arXiv preprint  arXiv:2307.07254 
+```
 
 ## Table of Contents
 - [cOOpD](#cradl)
@@ -27,7 +30,7 @@ Please cite the following work if you find this model useful for your research:
 ## General Information
 Official PyTorch implementation for paper **_cOOpD: Reformulating COPD classification on chest CT scans as anomaly detection using contrastive representations_**
 , accepted in MICCAI 2023.
-Paper linked here soon.
+
 ![pipeline.png](pipeline.png)
 ![pipeline_legend.png](pipeline_legend.png)
 
@@ -48,7 +51,7 @@ designed real-world prevalence settings further support that anomaly detection i
 released upon acceptance.
 ## Technologies Used
 - Python - version 3.7+
-- See requirements.txt
+- See environment.yml
 - [FrEIA Framework](https://github.com/VLL-HD/FrEIA)
 
 
