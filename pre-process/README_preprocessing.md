@@ -3,13 +3,19 @@
 
 For the trachea and aorta, use pre-trained nnU-Net Task_055_SegTHOR.
 
+Please also cite the following work if you use this pipeline for training:
+```
+Isensee, F., Jaeger, P. F., Kohl, S. A., Petersen, J., & Maier-Hein, K. H. (2020). 
+nnU-Net: a self-configuring method for deep learning-based biomedical image segmentation. Nature Methods, 1-9.
+```
+
 **Step 2: Setup your paths**
 
 Set all the paths to the data: 
 - pre-process/paths.py
 
 **Step 3: Save metadata from dicom files to pickle**
-Example in xxx.pkl
+
 ```
 $ python save_metadata_pickle.py 
 ```
